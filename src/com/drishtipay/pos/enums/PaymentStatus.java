@@ -1,4 +1,4 @@
-package enums;
+package com.drishtipay.pos.enums;
 
 public enum PaymentStatus {
     PAID,
