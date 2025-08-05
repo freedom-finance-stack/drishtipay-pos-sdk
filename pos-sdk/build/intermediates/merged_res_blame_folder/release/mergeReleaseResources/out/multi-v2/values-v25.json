@@ -1,0 +1,36 @@
+{
+    "logs": [
+        {
+            "outputFile": "org.freedomfinacestack.razorpay.drishtipay.pos-sdk-release-30:/values-v25/values-v25.xml",
+            "map": [
+                {
+                    "source": "/Users/varun.bansal/.gradle/caches/8.13/transforms/9b9155294a762aa93753a3cd4cc943b0/transformed/appcompat-1.6.1/res/values-v25/values-v25.xml",
+                    "from": {
+                        "startLines": "2,3,4,6",
+                        "startColumns": "4,4,4,4",
+                        "startOffsets": "55,126,209,308",
+                        "endLines": "2,3,5,7",
+                        "endColumns": "70,82,12,12",
+                        "endOffsets": "121,204,303,414"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "org.freedomfinacestack.razorpay.drishtipay.pos-sdk-mergeReleaseResources-28:/values-v25/values-v25.xml",
+            "map": [
+                {
+                    "source": "/Users/varun.bansal/.gradle/caches/8.13/transforms/9b9155294a762aa93753a3cd4cc943b0/transformed/appcompat-1.6.1/res/values-v25/values-v25.xml",
+                    "from": {
+                        "startLines": "2,3,4,6",
+                        "startColumns": "4,4,4,4",
+                        "startOffsets": "55,126,209,308",
+                        "endLines": "2,3,5,7",
+                        "endColumns": "70,82,12,12",
+                        "endOffsets": "121,204,303,414"
+                    }
+                }
+            ]
+        }
+    ]
+}

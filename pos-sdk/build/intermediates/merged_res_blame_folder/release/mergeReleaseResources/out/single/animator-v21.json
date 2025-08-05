@@ -1,0 +1,10 @@
+[
+    {
+        "merged": "org.freedomfinacestack.razorpay.drishtipay.pos-sdk-release-30:/animator-v21/m3_appbar_state_list_animator.xml",
+        "source": "org.freedomfinacestack.razorpay.drishtipay.pos-sdk-material-1.10.0-24:/animator-v21/m3_appbar_state_list_animator.xml"
+    },
+    {
+        "merged": "org.freedomfinacestack.razorpay.drishtipay.pos-sdk-release-30:/animator-v21/design_appbar_state_list_animator.xml",
+        "source": "org.freedomfinacestack.razorpay.drishtipay.pos-sdk-material-1.10.0-24:/animator-v21/design_appbar_state_list_animator.xml"
+    }
+]

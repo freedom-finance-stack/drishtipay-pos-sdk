@@ -1,0 +1,34 @@
+{
+    "logs": [
+        {
+            "outputFile": "org.freedomfinacestack.razorpay.drishtipay.pos-sdk-mergeReleaseResources-28:/values-w320dp-land-v13/values-w320dp-land-v13.xml",
+            "map": [
+                {
+                    "source": "/Users/varun.bansal/.gradle/caches/8.13/transforms/e37ea3ea89920679fe41c4a21bf94a28/transformed/material-1.10.0/res/values-w320dp-land-v13/values-w320dp-land-v13.xml",
+                    "from": {
+                        "startLines": "2,3",
+                        "startColumns": "4,4",
+                        "startOffsets": "55,110",
+                        "endColumns": "54,61",
+                        "endOffsets": "105,167"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "org.freedomfinacestack.razorpay.drishtipay.pos-sdk-release-30:/values-w320dp-land-v13/values-w320dp-land-v13.xml",
+            "map": [
+                {
+                    "source": "/Users/varun.bansal/.gradle/caches/8.13/transforms/e37ea3ea89920679fe41c4a21bf94a28/transformed/material-1.10.0/res/values-w320dp-land-v13/values-w320dp-land-v13.xml",
+                    "from": {
+                        "startLines": "2,3",
+                        "startColumns": "4,4",
+                        "startOffsets": "55,110",
+                        "endColumns": "54,61",
+                        "endOffsets": "105,167"
+                    }
+                }
+            ]
+        }
+    ]
+}

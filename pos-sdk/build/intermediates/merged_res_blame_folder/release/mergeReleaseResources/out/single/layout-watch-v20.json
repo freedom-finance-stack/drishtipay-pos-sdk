@@ -1,0 +1,10 @@
+[
+    {
+        "merged": "org.freedomfinacestack.razorpay.drishtipay.pos-sdk-release-30:/layout-watch-v20/abc_alert_dialog_title_material.xml",
+        "source": "org.freedomfinacestack.razorpay.drishtipay.pos-sdk-appcompat-1.6.1-11:/layout-watch-v20/abc_alert_dialog_title_material.xml"
+    },
+    {
+        "merged": "org.freedomfinacestack.razorpay.drishtipay.pos-sdk-release-30:/layout-watch-v20/abc_alert_dialog_button_bar_material.xml",
+        "source": "org.freedomfinacestack.razorpay.drishtipay.pos-sdk-appcompat-1.6.1-11:/layout-watch-v20/abc_alert_dialog_button_bar_material.xml"
+    }
+]
