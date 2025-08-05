@@ -1,1 +1,0 @@
-# Consumer rules for pos-sdk library 
