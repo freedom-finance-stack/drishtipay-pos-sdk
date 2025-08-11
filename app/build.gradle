@@ -3,28 +3,28 @@ plugins {
 }
 
 android {
-    namespace 'com.freedomfinancestack.drishtipay_pos_sdk'
-    compileSdk 36
+    namespace = 'com.freedomfinancestack.drishtipay_pos_sdk'
+    compileSdk = 36
 
     defaultConfig {
-        applicationId "com.freedomfinancestack.drishtipay_pos_sdk"
-        minSdk 34
-        targetSdk 36
-        versionCode 1
-        versionName "1.0"
+        applicationId = "com.freedomfinancestack.drishtipay_pos_sdk"
+        minSdk = 34
+        targetSdk = 36
+        versionCode = 1
+        versionName = "1.0"
 
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled = false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 }
 
