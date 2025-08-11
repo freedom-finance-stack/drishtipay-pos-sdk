@@ -1,0 +1,36 @@
+plugins {
+    alias(libs.plugins.android.library)
+}
+
+android {
+    namespace = 'com.freedomfinancestack.pos_sdk_core'
+    compileSdk = 36
+
+    defaultConfig {
+        minSdk = 23
+        targetSdk = 36
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles 'proguard-rules.pro'
+    }
+
+    buildTypes {}
+    buildFeatures {}
+    lint {}
+    packagingOptions {}
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+}
+
+dependencies {
+    
+    testImplementation libs.junit
+    androidTestImplementation libs.ext.junit
+    androidTestImplementation libs.espresso.core
+
+    // Lombok
+    compileOnly 'org.projectlombok:lombok:1.18.30'
+    annotationProcessor 'org.projectlombok:lombok:1.18.30'
+}
