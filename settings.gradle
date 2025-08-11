@@ -20,5 +20,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "drishtipay-pos-sdk"
-include ':app'
 include ':pos-sdk-core'
