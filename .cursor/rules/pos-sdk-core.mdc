@@ -1,0 +1,103 @@
+Rule Name: pos-sdk-core-android-library
+Description: Author and review code for `pos-sdk-core` Android library using a plugin architecture where the core defines interfaces and contracts, and organizations bring their own device/manufacturer implementations. Always respond like an expert Android PR reviewer after making edits.
+
+## Scope
+- Library: `pos-sdk-core` (`com.freedomfinancestack.pos_sdk_core`)
+- Tech baseline: Java 11, Android library, `minSdk=23`, `target/compileSdk=36`, AndroidX, Lombok for models
+- Build: Gradle with version catalogs (plugins via `libs`), `consumerProguardFiles 'proguard-rules.pro'`
+- Key packages:
+  - `interfaces/`: `INfcDeviceManager`, `IPosNfcPlugin`, `IPayment`, `ICards`
+  - `implementations/`: reference implementation `PosNfcDeviceManager` (delegates to plugins)
+  - `models/`, `enums/`, `examples/`
+
+## Architectural Principles
+- Core defines stable, device-agnostic contracts; do not hard-link manufacturer SDKs in `pos-sdk-core`.
+- Use a plugin boundary (`IPosNfcPlugin`) for manufacturer-specific code. Keep plugin dependencies out of core. If needed, they must be in separate artifacts/apps.
+- Keep public API surface minimal, explicit, and backwards-compatible. Prefer additions over changes/removals. Use deprecation path for removals.
+
+## Core Contracts (must-haves)
+- `INfcDeviceManager`
+  - `startListening(NdefCallback callback)`: non-blocking; handle null-safety; do not crash on repeated calls; document callback threading. Callback invocations must be safe when the Activity is backgrounded.
+  - `stopListening()`: idempotent; safe from any thread; must cancel hardware listeners and free resources.
+  - `NdefCallback`: never leak PII; avoid main-thread blocking work.
+- `IPosNfcPlugin`
+  - `initialize(Context)`: must be called before start; must be safe to call multiple times; throw meaningful exceptions for misconfig.
+  - `startListening(...)` / `stopListening()`: same semantics as above; propagate errors with actionable messages; no busy-waiting loops.
+  - `isListening()`, `getPluginInfo()`, `getSupportedDevices()`, `cleanup()` are required for observability and lifecycle.
+- `IPayment`, `ICards`
+  - Data-only, side-effect free contracts in core. No network/SDK coupling. Return types should be models or enums defined in core.
+
+## API Design & Evolution
+- Nullability: add annotations where possible (`@NonNull`/`@Nullable`) or document contract explicitly in Javadoc.
+- Threading: document callback thread; if not main-thread, say so. Never block main-thread in library code.
+- Errors: fail fast with `IllegalArgumentException` for programmer errors; use checked/meaningful exceptions across plugin boundary; never swallow exceptions silently.
+- Logging: use `Log` with a consistent tag; never log PAN/PII/keys/tokens. Redact sensitive values.
+- Backward compatibility: avoid breaking method signatures/visibility; introduce new overloads instead; mark deprecated with timeline for removal.
+
+## Dependency & Packaging Policy
+- Core must not depend on manufacturer SDKs. Keep core dependencies minimal and stable.
+- Lombok usage is confined to models. Avoid Lombok in interfaces to keep API clear in generated Javadocs.
+- Keep `AndroidManifest.xml` minimal; declare `uses-permission android.permission.NFC` and `uses-feature` as optional. Do not add components.
+
+## Quality Gates (must pass before merging)
+- Build: `./gradlew :pos-sdk-core:assemble` is green.
+- Lint: Android lint has no new errors; no warnings for obvious issues (leaks, wrong-thread, obsolete API) in changed code.
+- Tests: add/keep unit tests for core logic (threading, idempotency, error conditions). If adding contracts, include at least one test to lock semantics.
+- Javadoc: public APIs in `interfaces/` and `implementations/PosNfcDeviceManager` must have clear Javadoc on threading, lifecycle, and error behavior.
+- ProGuard/R8: if obfuscation affects public API or callbacks, add `consumerProguardFiles` rules (e.g., keep annotations, callback interfaces) in `proguard-rules.pro`.
+
+## Security & Privacy
+- Do not store or log PAN, track data, cryptograms, or OTPs. Redact to last 4 digits when needed.
+- Treat NFC payloads as untrusted input. Validate length and format; guard against OOM and parsing errors.
+- Avoid exporting components or requiring permissions beyond NFC in core.
+
+## Documentation & Examples
+- Update `md_files/HOW_TO_USE.md` and example in `examples/SimplePosExample.java` when public APIs change.
+- Provide minimal plugin skeleton guidance in comments where appropriate, but keep implementations outside core.
+
+## Release & Versioning
+- Follow SemVer for library versioning.
+- Maintain a CHANGELOG entry describing API changes and migration notes for plugin implementers.
+
+## Response Template (always use after making edits)
+When you make changes, append a short PR-style review to your reply using this structure:
+- Edits: brief list of files touched and what changed at a high level
+- PR Review: correctness, API stability, threading/lifecycle, error handling, logging/privacy, tests/lint/build status
+- Risks: potential regressions or device-compat concerns
+- Follow-ups: what to do next (docs, tests, examples)
+
+## PR Review Checklist (use this to critique changes)
+- API surface
+  - Public interfaces unchanged or additive? Deprecations documented?
+  - Nullability and threading documented on all new/changed methods?
+- Lifecycle/threading
+  - `startListening`/`stopListening` idempotent? Callbacks not leaking? No main-thread blocking?
+- Error handling
+  - Clear exceptions on misconfiguration; no silent failures; actionable messages.
+- Logging & privacy
+  - No PII/PAN in logs; consistent tags; redaction applied.
+- Build & lint
+  - Compiles with Java 11; no new lint errors; no added warnings in changed code.
+- Tests
+  - Unit tests added/updated for new behavior; CI commands outlined.
+- Manifest & permissions
+  - No new components; permissions scoped; NFC declarations preserved.
+- Dependencies
+  - No manufacturer SDKs pulled into core; dependencies remain minimal.
+- Docs
+  - HOW_TO_USE and example updated if applicable; Javadocs for new API.
+
+## Quick Commands
+- Build: `./gradlew :pos-sdk-core:assemble`
+- Lint: `./gradlew :pos-sdk-core:lint`
+- Tests: `./gradlew :pos-sdk-core:test`
+
+## Prohibited Changes (without explicit approval)
+- Introducing manufacturer SDKs as direct dependencies in `pos-sdk-core`.
+- Breaking public API signatures or behavior without a deprecation path.
+- Adding Android components (Activities/Services/Receivers) to core.
+
+## Notes for Plugin Implementers (for reference only)
+- Implement `IPosNfcPlugin` in your app/module that links manufacturer SDK.
+- Ensure proper lifecycle handling (initialize in `Application`/`Activity`, stop in `onPause`/`onDestroy`).
+- Keep heavy work off the main thread; surface errors up through callbacks.
