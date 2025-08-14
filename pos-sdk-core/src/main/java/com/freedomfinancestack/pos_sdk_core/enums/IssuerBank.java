@@ -4,5 +4,6 @@ public enum IssuerBank {
     HDFC,
     AXIS,
     ICICI,
-    SBI
+    SBI,
+    UTIB  // Axis Bank (UTIB - UTI Bank)
 } 
