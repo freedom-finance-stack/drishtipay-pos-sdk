@@ -1,0 +1,39 @@
+pluginManagement {
+    repositories {
+        google {
+            content {
+                includeGroupByRegex("com\\.android.*")
+                includeGroupByRegex("com\\.google.*")
+                includeGroupByRegex("androidx.*")
+            }
+        }
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+        // JitPack repository for GitHub dependencies
+        maven { 
+            url 'https://jitpack.io'
+            credentials { 
+                username = providers.environmentVariable("GITHUB_ACCESS_TOKEN").orNull
+            }
+        }
+        // GitHub Packages (if needed)
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/freedom-finance-stack/drishtipay-pos-sdk")
+            credentials {
+                username = "varunbgit"
+                password = providers.environmentVariable("GITHUB_ACCESS_TOKEN").orNull
+            }
+        }
+    }
+}
+
+rootProject.name = "razorpay-drishtipay-test"
+include ':app'
