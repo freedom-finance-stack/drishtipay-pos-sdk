@@ -14,8 +14,8 @@ import okhttp3.Response;
 
 public class InitiatePayment implements IPayment {
 
-    String RzpKey = "???"; // put your RzpKey
-    String RzpSecret = "???"; // put your RzpSecret
+    String RzpKey = "";
+    String RzpSecret = "";
 
     @Override
     public PaymentInitiationResponse initiatePayment(Card card, float amount) {
