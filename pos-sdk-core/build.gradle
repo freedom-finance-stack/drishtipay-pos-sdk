@@ -31,6 +31,12 @@ dependencies {
     androidTestImplementation libs.espresso.core
 
     // Lombok
-    compileOnly 'org.projectlombok:lombok:1.18.30'
-    annotationProcessor 'org.projectlombok:lombok:1.18.30'
+    compileOnly libs.lombok
+    annotationProcessor libs.lombok
+    
+    // AndroidX annotations for @NonNull/@Nullable
+    implementation 'androidx.annotation:annotation:1.6.0'
+    
+    // Note: GGWave library will need to be added as a native library
+    // For now, the implementation uses mock native methods
 }
