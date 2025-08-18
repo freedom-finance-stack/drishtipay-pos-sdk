@@ -5,6 +5,8 @@
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=flat)](LICENSE)
 [![MinSDK](https://img.shields.io/badge/MinSDK-23-red.svg?style=flat)](https://developer.android.com/about/versions/marshmallow/android-6.0)
 
+
+
 **Universal Android SDK for POS machine NFC payment processing** - supports PAX, Ingenico, Verifone, and any manufacturer through a plugin architecture.
 
 ---
