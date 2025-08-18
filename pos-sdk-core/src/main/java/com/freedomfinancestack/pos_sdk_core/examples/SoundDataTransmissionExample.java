@@ -8,17 +8,17 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.freedomfinancestack.pos_sdk_core.implementations.GGWaveFlowImpl;
-import com.freedomfinancestack.pos_sdk_core.implementations.GGWaveImpl;
-import com.freedomfinancestack.pos_sdk_core.interfaces.IGGWave;
-import com.freedomfinancestack.pos_sdk_core.interfaces.IGGWaveFlow;
+import com.freedomfinancestack.pos_sdk_core.implementations.SoundBasedDeviceWorkflowImpl;
+import com.freedomfinancestack.pos_sdk_core.implementations.SoundDataTransmissionImpl;
+import com.freedomfinancestack.pos_sdk_core.interfaces.ISoundDataTransmission;
+import com.freedomfinancestack.pos_sdk_core.interfaces.ISoundBasedDeviceWorkflow;
 
 /**
- * Comprehensive example showing how to use GGWave for sound-based data transmission.
+ * Comprehensive example showing how to use sound-based data transmission for POS systems.
  * 
  * Demonstrates three approaches:
- * 1. Basic GGWave usage (low-level API)
- * 2. Workflow-based usage (high-level API)
+ * 1. Basic sound data transmission (low-level API)
+ * 2. Device workflow usage (high-level API)
  * 3. POS payment data transfer scenarios
  * 
  * REQUIREMENTS:
@@ -26,26 +26,26 @@ import com.freedomfinancestack.pos_sdk_core.interfaces.IGGWaveFlow;
  * - Device with microphone and speakers
  * - Two devices for testing (sender and receiver)
  */
-public class GGWaveExample extends Activity {
+public class SoundDataTransmissionExample extends Activity {
     
-    private static final String TAG = "GGWaveExample";
+    private static final String TAG = "SoundDataTransmissionExample";
     
-    private IGGWave ggWave;
-    private IGGWaveFlow ggWaveFlow;
+    private ISoundDataTransmission soundDataTransmission;
+    private ISoundBasedDeviceWorkflow deviceWorkflow;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
-        // Initialize GGWave components
-        setupGGWave();
+        // Initialize sound transmission components
+        setupSoundTransmission();
         
         // Choose demo approach:
         
-        // APPROACH 1: Basic GGWave usage
+        // APPROACH 1: Basic sound data transmission
         demonstrateBasicUsage();
         
-        // APPROACH 2: Workflow-based usage
+        // APPROACH 2: Device workflow usage
         // demonstrateWorkflowUsage();
         
         // APPROACH 3: POS payment scenarios
@@ -53,25 +53,25 @@ public class GGWaveExample extends Activity {
     }
     
     /**
-     * Initialize GGWave components
+     * Initialize sound transmission components
      */
-    private void setupGGWave() {
-        Log.d(TAG, "Setting up GGWave components...");
+    private void setupSoundTransmission() {
+        Log.d(TAG, "Setting up sound transmission components...");
         
-        // Basic GGWave instance
-        ggWave = new GGWaveImpl(this);
+        // Basic sound data transmission instance
+        soundDataTransmission = new SoundDataTransmissionImpl(this);
         
-        // High-level workflow instance
-        ggWaveFlow = new GGWaveFlowImpl(this);
+        // High-level device workflow instance
+        deviceWorkflow = new SoundBasedDeviceWorkflowImpl(this);
         
-        showMessage("GGWave initialized successfully");
+        showMessage("Sound transmission initialized successfully");
     }
     
     /**
-     * APPROACH 1: Basic GGWave usage for simple data transmission
+     * APPROACH 1: Basic sound data transmission for simple data transmission
      */
     private void demonstrateBasicUsage() {
-        Log.d(TAG, "=== BASIC GGWAVE USAGE DEMO ===");
+        Log.d(TAG, "=== BASIC SOUND DATA TRANSMISSION DEMO ===");
         
         // Example 1: Sending data
         sendDataExample();
@@ -85,7 +85,7 @@ public class GGWaveExample extends Activity {
         
         String dataToSend = "Hello from POS terminal!";
         
-        ggWave.sendData(dataToSend, new IGGWave.GGWaveCallback() {
+        soundDataTransmission.sendData(dataToSend, new ISoundDataTransmission.SoundTransmissionCallback() {
             @Override
             public void onDataReceived(@NonNull String data) {
                 // Not used in send callback
@@ -119,14 +119,14 @@ public class GGWaveExample extends Activity {
     private void listenForDataExample() {
         Log.d(TAG, "--- Listening for Data Example ---");
         
-        ggWave.startListening(new IGGWave.GGWaveCallback() {
+        soundDataTransmission.startListening(new ISoundDataTransmission.SoundTransmissionCallback() {
             @Override
             public void onDataReceived(@NonNull String data) {
                 Log.d(TAG, "Data received: " + data);
                 showMessage("Received: " + data);
                 
                 // Stop listening after receiving data
-                ggWave.stopListening();
+                soundDataTransmission.stopListening();
             }
             
             @Override
@@ -155,10 +155,10 @@ public class GGWaveExample extends Activity {
     }
     
     /**
-     * APPROACH 2: Workflow-based usage for device pairing and data transfer
+     * APPROACH 2: Device workflow usage for device pairing and data transfer
      */
     private void demonstrateWorkflowUsage() {
-        Log.d(TAG, "=== WORKFLOW USAGE DEMO ===");
+        Log.d(TAG, "=== DEVICE WORKFLOW DEMO ===");
         
         // Example: Device pairing workflow
         devicePairingExample();
@@ -170,7 +170,7 @@ public class GGWaveExample extends Activity {
         String myDeviceId = "POS_TERMINAL_001";
         
         // Initiate pairing
-        ggWaveFlow.initiatePairing(myDeviceId, new IGGWaveFlow.PairingCallback() {
+        deviceWorkflow.initiatePairing(myDeviceId, new ISoundBasedDeviceWorkflow.DevicePairingCallback() {
             @Override
             public void onPairingSuccess(@NonNull String deviceId) {
                 Log.d(TAG, "Successfully paired with: " + deviceId);
@@ -181,7 +181,7 @@ public class GGWaveExample extends Activity {
             }
             
             @Override
-            public void onPairingRequest(@NonNull String deviceId, @NonNull IGGWaveFlow.PairingResponse response) {
+            public void onPairingRequest(@NonNull String deviceId, @NonNull ISoundBasedDeviceWorkflow.PairingResponse response) {
                 Log.d(TAG, "Pairing request from: " + deviceId);
                 showMessage("Pairing request from: " + deviceId);
                 
@@ -210,7 +210,7 @@ public class GGWaveExample extends Activity {
         
         String paymentData = "{\"amount\":\"25.99\",\"currency\":\"USD\",\"merchant\":\"Coffee Shop\"}";
         
-        ggWaveFlow.transferData(paymentData, new IGGWaveFlow.TransferCallback() {
+        deviceWorkflow.transferData(paymentData, new ISoundBasedDeviceWorkflow.DataTransferCallback() {
             @Override
             public void onTransferSuccess(@NonNull String data) {
                 Log.d(TAG, "Data transfer successful: " + data);
@@ -240,7 +240,7 @@ public class GGWaveExample extends Activity {
     }
     
     /**
-     * APPROACH 3: POS payment scenarios using GGWave
+     * APPROACH 3: POS payment scenarios using sound transmission
      */
     private void demonstratePaymentScenarios() {
         Log.d(TAG, "=== PAYMENT SCENARIOS DEMO ===");
@@ -258,9 +258,9 @@ public class GGWaveExample extends Activity {
         // Create payment request data
         String paymentRequest = createPaymentRequest("25.99", "USD", "Coffee Shop", "ORDER_123");
         
-        ggWave.setTransmissionVolume(0.8f); // Higher volume for payment scenarios
+        soundDataTransmission.setTransmissionVolume(0.8f); // Higher volume for payment scenarios
         
-        ggWave.sendData(paymentRequest, new IGGWave.GGWaveCallback() {
+        soundDataTransmission.sendData(paymentRequest, new ISoundDataTransmission.SoundTransmissionCallback() {
             @Override
             public void onDataReceived(@NonNull String data) {
                 // Not used in send callback
@@ -296,7 +296,7 @@ public class GGWaveExample extends Activity {
     private void listenForPaymentConfirmation() {
         Log.d(TAG, "--- Listen for Payment Confirmation ---");
         
-        ggWave.startListening(new IGGWave.GGWaveCallback() {
+        soundDataTransmission.startListening(new ISoundDataTransmission.SoundTransmissionCallback() {
             @Override
             public void onDataReceived(@NonNull String data) {
                 Log.d(TAG, "Received payment data: " + data);
@@ -359,7 +359,7 @@ public class GGWaveExample extends Activity {
         showMessage("Payment confirmed! Transaction completed.");
         
         // Stop listening after successful payment
-        ggWave.stopListening();
+        soundDataTransmission.stopListening();
     }
     
     // Utility methods
@@ -375,18 +375,18 @@ public class GGWaveExample extends Activity {
     protected void onDestroy() {
         super.onDestroy();
         
-        Log.d(TAG, "Cleaning up GGWave resources...");
+        Log.d(TAG, "Cleaning up sound transmission resources...");
         
-        // Clean up GGWave resources
-        if (ggWave != null) {
-            ggWave.cleanup();
+        // Clean up sound transmission resources
+        if (soundDataTransmission != null) {
+            soundDataTransmission.cleanup();
         }
         
-        if (ggWaveFlow != null) {
-            ggWaveFlow.cleanup();
+        if (deviceWorkflow != null) {
+            deviceWorkflow.cleanup();
         }
         
-        Log.d(TAG, "GGWave cleanup completed");
+        Log.d(TAG, "Sound transmission cleanup completed");
     }
     
     @Override
@@ -394,12 +394,12 @@ public class GGWaveExample extends Activity {
         super.onPause();
         
         // Stop listening when app goes to background
-        if (ggWave != null && ggWave.isListening()) {
-            ggWave.stopListening();
+        if (soundDataTransmission != null && soundDataTransmission.isListening()) {
+            soundDataTransmission.stopListening();
         }
         
-        if (ggWaveFlow != null) {
-            ggWaveFlow.cancelOperation();
+        if (deviceWorkflow != null) {
+            deviceWorkflow.cancelOperation();
         }
     }
 }

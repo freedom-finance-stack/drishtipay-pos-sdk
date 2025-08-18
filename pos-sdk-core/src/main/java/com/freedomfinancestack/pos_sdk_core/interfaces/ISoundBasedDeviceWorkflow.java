@@ -4,22 +4,22 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 /**
- * High-level interface for GGWave workflow operations.
+ * High-level interface for sound-based device workflow operations.
  * 
- * This interface provides simplified methods for common GGWave use cases
- * such as device pairing and data transfer workflows. It internally uses
- * the core IGGWave implementation.
+ * This interface provides simplified methods for common sound-based communication workflows
+ * such as device pairing and data transfer between devices. It internally uses
+ * the core ISoundDataTransmission implementation.
  * 
  * TYPICAL WORKFLOW:
- * 1. initiatePairing() - Start pairing process
+ * 1. initiatePairing() - Start device pairing process
  * 2. waitForPairing() - Wait for peer device to pair
  * 3. transferData() - Send data to paired device
  * 4. cleanup() - Clean up resources
  */
-public interface IGGWaveFlow {
+public interface ISoundBasedDeviceWorkflow {
 
     /**
-     * Initiates a device pairing process using GGWave.
+     * Initiates a device pairing process using sound transmission.
      * This will start listening for pairing requests and broadcast pairing availability.
      * 
      * @param deviceId Unique identifier for this device
@@ -27,7 +27,7 @@ public interface IGGWaveFlow {
      * @throws IllegalArgumentException if deviceId is null or empty
      * @throws IllegalStateException if not properly initialized
      */
-    void initiatePairing(@NonNull String deviceId, @NonNull PairingCallback callback);
+    void initiatePairing(@NonNull String deviceId, @NonNull DevicePairingCallback callback);
 
     /**
      * Waits for a pairing request from another device.
@@ -36,7 +36,7 @@ public interface IGGWaveFlow {
      * @param timeout Timeout in milliseconds (0 for no timeout)
      * @param callback Callback to handle pairing events
      */
-    void waitForPairing(long timeout, @NonNull PairingCallback callback);
+    void waitForPairing(long timeout, @NonNull DevicePairingCallback callback);
 
     /**
      * Transfers data to a previously paired device.
@@ -46,7 +46,7 @@ public interface IGGWaveFlow {
      * @throws IllegalArgumentException if data is null or empty
      * @throws IllegalStateException if no device is paired
      */
-    void transferData(@NonNull String data, @NonNull TransferCallback callback);
+    void transferData(@NonNull String data, @NonNull DataTransferCallback callback);
 
     /**
      * Transfers data to a previously paired device without callback.
@@ -64,7 +64,7 @@ public interface IGGWaveFlow {
      * @param callback Callback to handle the response
      * @throws IllegalStateException if no device is paired
      */
-    void requestData(@NonNull String requestType, @NonNull TransferCallback callback);
+    void requestData(@NonNull String requestType, @NonNull DataTransferCallback callback);
 
     /**
      * Cancels any ongoing pairing or transfer operation.
@@ -105,9 +105,9 @@ public interface IGGWaveFlow {
     void cleanup();
 
     /**
-     * Callback interface for pairing operations.
+     * Callback interface for device pairing operations.
      */
-    interface PairingCallback {
+    interface DevicePairingCallback {
         /**
          * Called when pairing is successfully established.
          * 
@@ -139,7 +139,7 @@ public interface IGGWaveFlow {
     /**
      * Callback interface for data transfer operations.
      */
-    interface TransferCallback {
+    interface DataTransferCallback {
         /**
          * Called when data transfer is successful.
          * 

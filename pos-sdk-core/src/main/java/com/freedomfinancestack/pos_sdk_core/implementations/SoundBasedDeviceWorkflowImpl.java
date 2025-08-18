@@ -6,8 +6,9 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.freedomfinancestack.pos_sdk_core.interfaces.IGGWave;
-import com.freedomfinancestack.pos_sdk_core.interfaces.IGGWaveFlow;
+import com.freedomfinancestack.pos_sdk_core.interfaces.ISoundDataTransmission;
+import com.freedomfinancestack.pos_sdk_core.interfaces.ISoundBasedDeviceWorkflow;
+import com.freedomfinancestack.pos_sdk_core.constants.GGWaveConstants;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -16,11 +17,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * Implementation of IGGWaveFlow providing high-level workflow operations for GGWave.
+ * Implementation of ISoundBasedDeviceWorkflow providing high-level workflow operations for sound-based device communication.
  * 
  * This implementation manages:
- * - Device pairing workflows
- * - Data transfer sessions
+ * - Device pairing workflows via sound transmission
+ * - Data transfer sessions between paired devices
  * - State management and timeouts
  * - Error recovery and retry logic
  * 
@@ -31,21 +32,12 @@ import java.util.concurrent.atomic.AtomicReference;
  * - TRANSFERRING: Actively transferring data
  * - ERROR: In error state, requires reset
  */
-public class GGWaveFlowImpl implements IGGWaveFlow {
+public class SoundBasedDeviceWorkflowImpl implements ISoundBasedDeviceWorkflow {
     
-    private static final String TAG = "GGWaveFlowImpl";
-    
-    // Protocol constants
-    private static final String PAIRING_REQUEST_PREFIX = "PAIR_REQ:";
-    private static final String PAIRING_RESPONSE_PREFIX = "PAIR_RSP:";
-    private static final String DATA_TRANSFER_PREFIX = "DATA:";
-    private static final String DATA_REQUEST_PREFIX = "REQ:";
-    private static final String ACK_PREFIX = "ACK:";
-    
-    private static final long DEFAULT_PAIRING_TIMEOUT = 30000; // 30 seconds
+    private static final String TAG = "SoundBasedDeviceWorkflowImpl";
     
     private Context context;
-    private IGGWave ggWave;
+    private ISoundDataTransmission soundDataTransmission;
     private ScheduledExecutorService scheduler;
     
     // State management
@@ -54,34 +46,34 @@ public class GGWaveFlowImpl implements IGGWaveFlow {
     private final AtomicReference<String> myDeviceId = new AtomicReference<>();
     
     // Current operation callbacks
-    private volatile PairingCallback currentPairingCallback;
-    private volatile TransferCallback currentTransferCallback;
+    private volatile DevicePairingCallback currentPairingCallback;
+    private volatile DataTransferCallback currentTransferCallback;
     private volatile ScheduledFuture<?> timeoutTask;
     
     /**
-     * Creates a new GGWaveFlowImpl instance.
+     * Creates a new SoundBasedDeviceWorkflowImpl instance.
      * 
      * @param context Android application context
      * @throws IllegalArgumentException if context is null
      */
-    public GGWaveFlowImpl(@NonNull Context context) {
+    public SoundBasedDeviceWorkflowImpl(@NonNull Context context) {
         if (context == null) {
             throw new IllegalArgumentException("Context cannot be null");
         }
         
         this.context = context.getApplicationContext();
-        this.ggWave = new GGWaveImpl(this.context);
+        this.soundDataTransmission = new SoundDataTransmissionImpl(this.context);
         this.scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
-            Thread t = new Thread(r, "GGWaveFlow-Scheduler");
+            Thread t = new Thread(r, GGWaveConstants.SCHEDULER_THREAD_NAME);
             t.setDaemon(true);
             return t;
         });
         
-        Log.d(TAG, "GGWaveFlowImpl initialized");
+        Log.d(TAG, "SoundBasedDeviceWorkflowImpl initialized");
     }
     
     @Override
-    public void initiatePairing(@NonNull String deviceId, @NonNull PairingCallback callback) {
+    public void initiatePairing(@NonNull String deviceId, @NonNull DevicePairingCallback callback) {
         if (deviceId == null || deviceId.trim().isEmpty()) {
             throw new IllegalArgumentException("Device ID cannot be null or empty");
         }
@@ -89,8 +81,8 @@ public class GGWaveFlowImpl implements IGGWaveFlow {
             throw new IllegalArgumentException("Callback cannot be null");
         }
         
-        if (!ggWave.isInitialized()) {
-            callback.onPairingFailed("GGWave not initialized");
+        if (!soundDataTransmission.isInitialized()) {
+            callback.onPairingFailed("Sound data transmission not initialized");
             return;
         }
         
@@ -105,11 +97,11 @@ public class GGWaveFlowImpl implements IGGWaveFlow {
         Log.d(TAG, "Initiating pairing as device: " + deviceId);
         
         // Start listening for pairing responses
-        ggWave.startListening(new PairingGGWaveCallback());
+        soundDataTransmission.startListening(new PairingGGWaveCallback());
         
         // Send pairing request
-        String pairingRequest = PAIRING_REQUEST_PREFIX + deviceId;
-        ggWave.sendData(pairingRequest, new IGGWave.GGWaveCallback() {
+        String pairingRequest = GGWaveConstants.PAIRING_REQUEST_PREFIX + deviceId;
+        soundDataTransmission.sendData(pairingRequest, new ISoundDataTransmission.SoundTransmissionCallback() {
             @Override
             public void onDataReceived(@NonNull String data) {
                 // Not used in send callback
@@ -139,13 +131,13 @@ public class GGWaveFlowImpl implements IGGWaveFlow {
     }
     
     @Override
-    public void waitForPairing(long timeout, @NonNull PairingCallback callback) {
+    public void waitForPairing(long timeout, @NonNull DevicePairingCallback callback) {
         if (callback == null) {
             throw new IllegalArgumentException("Callback cannot be null");
         }
         
-        if (!ggWave.isInitialized()) {
-            callback.onPairingFailed("GGWave not initialized");
+        if (!soundDataTransmission.isInitialized()) {
+            callback.onPairingFailed("Sound data transmission not initialized");
             return;
         }
         
@@ -155,12 +147,12 @@ public class GGWaveFlowImpl implements IGGWaveFlow {
         }
         
         currentPairingCallback = callback;
-        long actualTimeout = timeout > 0 ? timeout : DEFAULT_PAIRING_TIMEOUT;
+        long actualTimeout = timeout > 0 ? timeout : GGWaveConstants.DEFAULT_PAIRING_TIMEOUT_MS;
         
         Log.d(TAG, "Waiting for pairing requests (timeout: " + actualTimeout + "ms)");
         
         // Start listening for pairing requests
-        ggWave.startListening(new PairingGGWaveCallback());
+        soundDataTransmission.startListening(new PairingGGWaveCallback());
         
         // Set timeout
         timeoutTask = scheduler.schedule(() -> {
@@ -171,7 +163,7 @@ public class GGWaveFlowImpl implements IGGWaveFlow {
     }
     
     @Override
-    public void transferData(@NonNull String data, @NonNull TransferCallback callback) {
+    public void transferData(@NonNull String data, @NonNull DataTransferCallback callback) {
         if (data == null || data.trim().isEmpty()) {
             throw new IllegalArgumentException("Data cannot be null or empty");
         }
@@ -193,8 +185,8 @@ public class GGWaveFlowImpl implements IGGWaveFlow {
         
         Log.d(TAG, "Transferring data to paired device: " + pairedDeviceId.get());
         
-        String transferData = DATA_TRANSFER_PREFIX + data;
-        ggWave.sendData(transferData, new IGGWave.GGWaveCallback() {
+        String transferData = GGWaveConstants.DATA_TRANSFER_PREFIX + data;
+        soundDataTransmission.sendData(transferData, new ISoundDataTransmission.SoundTransmissionCallback() {
             @Override
             public void onDataReceived(@NonNull String receivedData) {
                 // Not used in send callback
@@ -230,7 +222,7 @@ public class GGWaveFlowImpl implements IGGWaveFlow {
     
     @Override
     public void transferData(@NonNull String data) {
-        transferData(data, new TransferCallback() {
+        transferData(data, new DataTransferCallback() {
             @Override
             public void onTransferSuccess(@NonNull String transferredData) {
                 Log.d(TAG, "Data transferred successfully (no callback)");
@@ -254,7 +246,7 @@ public class GGWaveFlowImpl implements IGGWaveFlow {
     }
     
     @Override
-    public void requestData(@NonNull String requestType, @NonNull TransferCallback callback) {
+    public void requestData(@NonNull String requestType, @NonNull DataTransferCallback callback) {
         if (requestType == null || requestType.trim().isEmpty()) {
             throw new IllegalArgumentException("Request type cannot be null or empty");
         }
@@ -271,8 +263,8 @@ public class GGWaveFlowImpl implements IGGWaveFlow {
         
         Log.d(TAG, "Requesting data from paired device: " + requestType);
         
-        String dataRequest = DATA_REQUEST_PREFIX + requestType;
-        ggWave.sendData(dataRequest);
+        String dataRequest = GGWaveConstants.DATA_REQUEST_PREFIX + requestType;
+        soundDataTransmission.sendData(dataRequest);
     }
     
     @Override
@@ -283,7 +275,7 @@ public class GGWaveFlowImpl implements IGGWaveFlow {
             timeoutTask.cancel(true);
         }
         
-        ggWave.stopListening();
+        soundDataTransmission.stopListening();
         
         WorkflowState state = currentState.get();
         if (state == WorkflowState.PAIRING && currentPairingCallback != null) {
@@ -311,7 +303,7 @@ public class GGWaveFlowImpl implements IGGWaveFlow {
         Log.d(TAG, "Unpairing from device: " + pairedDeviceId.get());
         
         pairedDeviceId.set(null);
-        ggWave.stopListening();
+        soundDataTransmission.stopListening();
         currentState.set(WorkflowState.IDLE);
     }
     
@@ -323,7 +315,7 @@ public class GGWaveFlowImpl implements IGGWaveFlow {
     
     @Override
     public void cleanup() {
-        Log.d(TAG, "Cleaning up GGWaveFlow resources...");
+        Log.d(TAG, "Cleaning up SoundBasedDeviceWorkflow resources...");
         
         cancelOperation();
         
@@ -331,11 +323,11 @@ public class GGWaveFlowImpl implements IGGWaveFlow {
             scheduler.shutdown();
         }
         
-        if (ggWave != null) {
-            ggWave.cleanup();
+        if (soundDataTransmission != null) {
+            soundDataTransmission.cleanup();
         }
         
-        Log.d(TAG, "GGWaveFlow cleanup completed");
+        Log.d(TAG, "SoundBasedDeviceWorkflow cleanup completed");
     }
     
     private void handlePairingFailure(String errorMessage) {
@@ -357,26 +349,26 @@ public class GGWaveFlowImpl implements IGGWaveFlow {
         currentState.set(WorkflowState.IDLE);
         currentPairingCallback = null;
         currentTransferCallback = null;
-        ggWave.stopListening();
+        soundDataTransmission.stopListening();
     }
     
     /**
-     * GGWave callback handler for pairing operations.
+     * Sound transmission callback handler for pairing operations.
      */
-    private class PairingGGWaveCallback implements IGGWave.GGWaveCallback {
+    private class PairingGGWaveCallback implements ISoundDataTransmission.SoundTransmissionCallback {
         
         @Override
         public void onDataReceived(@NonNull String data) {
             Log.d(TAG, "Received pairing data: " + data);
             
-            if (data.startsWith(PAIRING_REQUEST_PREFIX)) {
-                handlePairingRequest(data.substring(PAIRING_REQUEST_PREFIX.length()));
-            } else if (data.startsWith(PAIRING_RESPONSE_PREFIX)) {
-                handlePairingResponse(data.substring(PAIRING_RESPONSE_PREFIX.length()));
-            } else if (data.startsWith(DATA_TRANSFER_PREFIX)) {
-                handleDataTransfer(data.substring(DATA_TRANSFER_PREFIX.length()));
-            } else if (data.startsWith(DATA_REQUEST_PREFIX)) {
-                handleDataRequest(data.substring(DATA_REQUEST_PREFIX.length()));
+            if (data.startsWith(GGWaveConstants.PAIRING_REQUEST_PREFIX)) {
+                handlePairingRequest(data.substring(GGWaveConstants.PAIRING_REQUEST_PREFIX.length()));
+            } else if (data.startsWith(GGWaveConstants.PAIRING_RESPONSE_PREFIX)) {
+                handlePairingResponse(data.substring(GGWaveConstants.PAIRING_RESPONSE_PREFIX.length()));
+            } else if (data.startsWith(GGWaveConstants.DATA_TRANSFER_PREFIX)) {
+                handleDataTransfer(data.substring(GGWaveConstants.DATA_TRANSFER_PREFIX.length()));
+            } else if (data.startsWith(GGWaveConstants.DATA_REQUEST_PREFIX)) {
+                handleDataRequest(data.substring(GGWaveConstants.DATA_REQUEST_PREFIX.length()));
             }
         }
         
@@ -387,8 +379,8 @@ public class GGWaveFlowImpl implements IGGWaveFlow {
         
         @Override
         public void onError(@NonNull String errorMessage, @Nullable Exception exception) {
-            Log.e(TAG, "GGWave error during pairing: " + errorMessage);
-            handlePairingFailure("GGWave error: " + errorMessage);
+            Log.e(TAG, "Sound transmission error during pairing: " + errorMessage);
+            handlePairingFailure("Sound transmission error: " + errorMessage);
         }
         
         @Override
@@ -415,8 +407,8 @@ public class GGWaveFlowImpl implements IGGWaveFlow {
                     currentState.set(WorkflowState.PAIRED);
                     
                     // Send pairing response
-                    String pairingResponse = PAIRING_RESPONSE_PREFIX + myDeviceId.get();
-                    ggWave.sendData(pairingResponse);
+                    String pairingResponse = GGWaveConstants.PAIRING_RESPONSE_PREFIX + myDeviceId.get();
+                    soundDataTransmission.sendData(pairingResponse);
                     
                     if (currentPairingCallback != null) {
                         currentPairingCallback.onPairingSuccess(requestingDeviceId);

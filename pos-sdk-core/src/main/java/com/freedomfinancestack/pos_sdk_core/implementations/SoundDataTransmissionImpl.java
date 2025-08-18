@@ -7,7 +7,8 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.freedomfinancestack.pos_sdk_core.interfaces.IGGWave;
+import com.freedomfinancestack.pos_sdk_core.interfaces.ISoundDataTransmission;
+import com.freedomfinancestack.pos_sdk_core.constants.GGWaveConstants;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -15,7 +16,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * Implementation of IGGWave using the GGWave library for sound-based data transmission.
+ * Implementation of ISoundDataTransmission using the GGWave library for sound-based data transmission.
  * 
  * This implementation provides:
  * - Non-blocking audio transmission and reception
@@ -32,15 +33,9 @@ import java.util.concurrent.atomic.AtomicReference;
  * - Audio operations run on dedicated executor threads
  * - Thread-safe for concurrent operations
  */
-public class GGWaveImpl implements IGGWave {
+public class SoundDataTransmissionImpl implements ISoundDataTransmission {
     
-    private static final String TAG = "GGWaveImpl";
-    
-    // GGWave configuration constants
-    private static final int SAMPLE_RATE = 48000;
-    private static final int SAMPLES_PER_FRAME = 1024;
-    private static final float DEFAULT_VOLUME = 0.5f;
-    private static final int MAX_DATA_LENGTH = 140; // GGWave typical limit
+    private static final String TAG = "SoundDataTransmissionImpl";
     
     private Context context;
     private AudioManager audioManager;
@@ -49,23 +44,27 @@ public class GGWaveImpl implements IGGWave {
     // State management
     private final AtomicBoolean isInitialized = new AtomicBoolean(false);
     private final AtomicBoolean isListening = new AtomicBoolean(false);
-    private final AtomicReference<GGWaveCallback> currentCallback = new AtomicReference<>();
-    private final AtomicReference<Float> transmissionVolume = new AtomicReference<>(DEFAULT_VOLUME);
+    private final AtomicReference<SoundTransmissionCallback> currentCallback = new AtomicReference<>();
+    private final AtomicReference<Float> transmissionVolume = new AtomicReference<>(GGWaveConstants.DEFAULT_VOLUME);
     
     // Native GGWave instance (would be initialized with actual library)
     private long nativeInstance = 0;
     
     /**
-     * Creates a new GGWaveImpl instance.
+     * Creates a new SoundDataTransmissionImpl instance.
      * 
      * @param context Android application context
      * @throws IllegalArgumentException if context is null
      */
-    public GGWaveImpl(@NonNull Context context) {
+    public SoundDataTransmissionImpl(@NonNull Context context) {
+        if (context == null) {
+            throw new IllegalArgumentException("Context cannot be null");
+        }
+        
         this.context = context.getApplicationContext();
         this.audioManager = (AudioManager) this.context.getSystemService(Context.AUDIO_SERVICE);
         this.executorService = Executors.newCachedThreadPool(r -> {
-            Thread t = new Thread(r, "GGWave-Worker");
+            Thread t = new Thread(r, GGWaveConstants.THREAD_NAME_PREFIX);
             t.setDaemon(true);
             return t;
         });
@@ -77,7 +76,7 @@ public class GGWaveImpl implements IGGWave {
         try {
             // Initialize GGWave native library
             // In real implementation, this would call native methods
-            nativeInstance = mockInitializeNative(SAMPLE_RATE, SAMPLES_PER_FRAME);
+            nativeInstance = mockInitializeNative(GGWaveConstants.SAMPLE_RATE, GGWaveConstants.SAMPLES_PER_FRAME);
             
             if (nativeInstance != 0) {
                 isInitialized.set(true);
@@ -91,7 +90,11 @@ public class GGWaveImpl implements IGGWave {
     }
     
     @Override
-    public void startListening(@NonNull GGWaveCallback callback) {
+    public void startListening(@NonNull SoundTransmissionCallback callback) {
+        if (callback == null) {
+            throw new IllegalArgumentException("Callback cannot be null");
+        }
+        
         if (!isInitialized.get()) {
             callback.onError("GGWave not initialized", new IllegalStateException("Not initialized"));
             return;
@@ -113,21 +116,21 @@ public class GGWaveImpl implements IGGWave {
                 while (isListening.get()) {
                     String receivedData = mockCaptureAndDecodeNative(nativeInstance);
                     if (receivedData != null && !receivedData.isEmpty()) {
-                        GGWaveCallback cb = currentCallback.get();
+                        SoundTransmissionCallback cb = currentCallback.get();
                         if (cb != null) {
                             cb.onDataReceived(receivedData);
                         }
                     }
                     
                     // Small delay to prevent busy waiting
-                    Thread.sleep(50);
+                    Thread.sleep(GGWaveConstants.AUDIO_CAPTURE_DELAY_MS);
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 Log.d(TAG, "Listening interrupted");
             } catch (Exception e) {
                 Log.e(TAG, "Error during listening", e);
-                GGWaveCallback cb = currentCallback.get();
+                SoundTransmissionCallback cb = currentCallback.get();
                 if (cb != null) {
                     cb.onError("Listening error: " + e.getMessage(), e);
                 }
@@ -149,8 +152,8 @@ public class GGWaveImpl implements IGGWave {
     }
     
     @Override
-    public void sendData(@NonNull String data, @Nullable GGWaveCallback callback) {
-        if (data.trim().isEmpty()) {
+    public void sendData(@NonNull String data, @Nullable SoundTransmissionCallback callback) {
+        if (data == null || data.trim().isEmpty()) {
             throw new IllegalArgumentException("Data cannot be null or empty");
         }
         
@@ -158,8 +161,8 @@ public class GGWaveImpl implements IGGWave {
             throw new IllegalStateException("GGWave not initialized");
         }
         
-        if (data.length() > MAX_DATA_LENGTH) {
-            String error = "Data too long. Maximum length: " + MAX_DATA_LENGTH + ", provided: " + data.length();
+        if (data.length() > GGWaveConstants.MAX_DATA_LENGTH) {
+            String error = "Data too long. Maximum length: " + GGWaveConstants.MAX_DATA_LENGTH + ", provided: " + data.length();
             if (callback != null) {
                 callback.onError(error, new IllegalArgumentException(error));
             }
@@ -172,7 +175,7 @@ public class GGWaveImpl implements IGGWave {
                     callback.onTransmissionStarted();
                 }
                 
-                Log.d(TAG, "Sending data via GGWave: " + data.substring(0, Math.min(data.length(), 20)) + "...");
+                Log.d(TAG, "Sending data via GGWave: " + data.substring(0, Math.min(data.length(), GGWaveConstants.LOG_DATA_TRUNCATE_LENGTH)) + "...");
                 
                 // Encode data to audio
                 byte[] audioData = mockEncodeToAudioNative(nativeInstance, data);
@@ -226,8 +229,8 @@ public class GGWaveImpl implements IGGWave {
     
     @Override
     public void setTransmissionVolume(float volume) {
-        if (volume < 0.0f || volume > 1.0f) {
-            throw new IllegalArgumentException("Volume must be between 0.0 and 1.0, got: " + volume);
+        if (volume < GGWaveConstants.MIN_VOLUME || volume > GGWaveConstants.MAX_VOLUME) {
+            throw new IllegalArgumentException("Volume must be between " + GGWaveConstants.MIN_VOLUME + " and " + GGWaveConstants.MAX_VOLUME + ", got: " + volume);
         }
         transmissionVolume.set(volume);
         Log.d(TAG, "Transmission volume set to: " + volume);
@@ -267,7 +270,7 @@ public class GGWaveImpl implements IGGWave {
             
             // In real implementation, this would use AudioTrack to play the audio
             // For now, we simulate the audio playback
-            Thread.sleep(audioData.length / (SAMPLE_RATE / 1000)); // Simulate playback duration
+            Thread.sleep(audioData.length / (GGWaveConstants.SAMPLE_RATE / 1000)); // Simulate playback duration
             
             Log.d(TAG, "Audio data played successfully");
         } catch (Exception e) {
@@ -307,7 +310,7 @@ public class GGWaveImpl implements IGGWave {
     
     private byte[] mockEncodeToAudioNative(long instance, String data) {
         // Mock: return fake audio data
-        byte[] mockAudio = new byte[SAMPLE_RATE * 2]; // 2 seconds of mock audio
+        byte[] mockAudio = new byte[GGWaveConstants.SAMPLE_RATE * GGWaveConstants.MOCK_AUDIO_DURATION_SECONDS]; 
         // In real implementation, this would contain actual encoded audio
         return mockAudio;
     }

@@ -111,14 +111,14 @@ implementation 'com.freedomfinancestack:pos-sdk-core:1.0.0'
 
 The SDK now includes GGWave functionality for sound-based data transmission between devices.
 
-### Quick Start with GGWave
+### Quick Start with Sound Data Transmission
 
 ```java
-// Step 1: Create GGWave instance
-IGGWave ggWave = new GGWaveImpl(context);
+// Step 1: Create sound data transmission instance
+ISoundDataTransmission soundTransmission = new SoundDataTransmissionImpl(context);
 
 // Step 2: Send data via sound
-ggWave.sendData("Hello World!", new IGGWave.GGWaveCallback() {
+soundTransmission.sendData("Hello World!", new ISoundDataTransmission.SoundTransmissionCallback() {
     @Override
     public void onDataSent(@NonNull String data) {
         Log.d(TAG, "Data sent successfully: " + data);
@@ -133,7 +133,7 @@ ggWave.sendData("Hello World!", new IGGWave.GGWaveCallback() {
 });
 
 // Step 3: Listen for incoming data
-ggWave.startListening(new IGGWave.GGWaveCallback() {
+soundTransmission.startListening(new ISoundDataTransmission.SoundTransmissionCallback() {
     @Override
     public void onDataReceived(@NonNull String data) {
         Log.d(TAG, "Received: " + data);
@@ -149,7 +149,7 @@ ggWave.startListening(new IGGWave.GGWaveCallback() {
 });
 
 // Step 4: Cleanup when done
-ggWave.cleanup();
+soundTransmission.cleanup();
 ```
 
 ### High-Level Workflow API
@@ -157,18 +157,18 @@ ggWave.cleanup();
 For more complex scenarios like device pairing and data transfer workflows:
 
 ```java
-// Create workflow manager
-IGGWaveFlow ggWaveFlow = new GGWaveFlowImpl(context);
+// Create device workflow manager
+ISoundBasedDeviceWorkflow deviceWorkflow = new SoundBasedDeviceWorkflowImpl(context);
 
 // Initiate pairing with another device
-ggWaveFlow.initiatePairing("POS_TERMINAL_001", new IGGWaveFlow.PairingCallback() {
+deviceWorkflow.initiatePairing("POS_TERMINAL_001", new ISoundBasedDeviceWorkflow.DevicePairingCallback() {
     @Override
     public void onPairingSuccess(@NonNull String deviceId) {
         Log.d(TAG, "Paired with: " + deviceId);
         
         // Transfer payment data to paired device
         String paymentData = "{\"amount\":\"25.99\",\"currency\":\"USD\"}";
-        ggWaveFlow.transferData(paymentData, new IGGWaveFlow.TransferCallback() {
+        deviceWorkflow.transferData(paymentData, new ISoundBasedDeviceWorkflow.DataTransferCallback() {
             @Override
             public void onTransferSuccess(@NonNull String data) {
                 Log.d(TAG, "Payment data sent successfully");
@@ -198,13 +198,13 @@ ggWaveFlow.initiatePairing("POS_TERMINAL_001", new IGGWaveFlow.PairingCallback()
 
 ```java
 public class PaymentActivity extends Activity {
-    private IGGWave ggWave;
+    private ISoundDataTransmission soundTransmission;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
-        ggWave = new GGWaveImpl(this);
+        soundTransmission = new SoundDataTransmissionImpl(this);
         
         // Send payment request to customer's device
         sendPaymentRequest("25.99", "USD", "Coffee Shop");
@@ -216,7 +216,7 @@ public class PaymentActivity extends Activity {
             amount, currency, merchant
         );
         
-        ggWave.sendData(paymentRequest, new IGGWave.GGWaveCallback() {
+        soundTransmission.sendData(paymentRequest, new ISoundDataTransmission.SoundTransmissionCallback() {
             @Override
             public void onDataSent(@NonNull String data) {
                 showMessage("Payment request sent to customer");
@@ -244,12 +244,12 @@ public class PaymentActivity extends Activity {
     }
     
     private void listenForPaymentConfirmation() {
-        ggWave.startListening(new IGGWave.GGWaveCallback() {
+        soundTransmission.startListening(new ISoundDataTransmission.SoundTransmissionCallback() {
             @Override
             public void onDataReceived(@NonNull String data) {
                 if (data.contains("payment_confirmation")) {
                     showMessage("Payment confirmed! Transaction completed.");
-                    ggWave.stopListening();
+                    soundTransmission.stopListening();
                 }
             }
             
@@ -268,26 +268,26 @@ public class PaymentActivity extends Activity {
 
 ```java
 // Sync transaction data between POS terminals
-IGGWaveFlow flow = new GGWaveFlowImpl(context);
+ISoundBasedDeviceWorkflow deviceWorkflow = new SoundBasedDeviceWorkflowImpl(context);
 
 // Terminal A: Wait for pairing
-flow.waitForPairing(30000, new IGGWaveFlow.PairingCallback() {
+deviceWorkflow.waitForPairing(30000, new ISoundBasedDeviceWorkflow.DevicePairingCallback() {
     @Override
     public void onPairingSuccess(@NonNull String deviceId) {
         // Send daily sales data
         String salesData = getDailySalesData();
-        flow.transferData(salesData);
+        deviceWorkflow.transferData(salesData);
     }
     
     // Other callback methods...
 });
 
 // Terminal B: Initiate pairing
-flow.initiatePairing("TERMINAL_B", new IGGWaveFlow.PairingCallback() {
+deviceWorkflow.initiatePairing("TERMINAL_B", new ISoundBasedDeviceWorkflow.DevicePairingCallback() {
     @Override
     public void onPairingSuccess(@NonNull String deviceId) {
         // Request sales data from paired terminal
-        flow.requestData("daily_sales", new IGGWaveFlow.TransferCallback() {
+        deviceWorkflow.requestData("daily_sales", new ISoundBasedDeviceWorkflow.DataTransferCallback() {
             @Override
             public void onDataReceived(@NonNull String data) {
                 processSalesData(data);
@@ -316,18 +316,18 @@ Add to your `AndroidManifest.xml`:
 ### GGWave Configuration
 
 ```java
-IGGWave ggWave = new GGWaveImpl(context);
+ISoundDataTransmission soundTransmission = new SoundDataTransmissionImpl(context);
 
 // Set transmission volume (0.0 to 1.0)
-ggWave.setTransmissionVolume(0.8f);
+soundTransmission.setTransmissionVolume(0.8f);
 
 // Check if properly initialized
-if (ggWave.isInitialized()) {
+if (soundTransmission.isInitialized()) {
     // Ready to use
 }
 
 // Check if currently listening
-if (ggWave.isListening()) {
+if (soundTransmission.isListening()) {
     // Currently receiving data
 }
 ```
@@ -339,8 +339,8 @@ if (ggWave.isListening()) {
    @Override
    protected void onDestroy() {
        super.onDestroy();
-       if (ggWave != null) {
-           ggWave.cleanup();
+       if (soundTransmission != null) {
+           soundTransmission.cleanup();
        }
    }
    ```
@@ -358,15 +358,15 @@ if (ggWave.isListening()) {
 3. **Use appropriate volume levels:**
    ```java
    // For quiet environments
-   ggWave.setTransmissionVolume(0.3f);
+   soundTransmission.setTransmissionVolume(0.3f);
    
    // For noisy environments  
-   ggWave.setTransmissionVolume(0.8f);
+   soundTransmission.setTransmissionVolume(0.8f);
    ```
 
 4. **Handle threading properly:**
    ```java
-   // All GGWave callbacks run on background threads
+   // All sound transmission callbacks run on background threads
    // Update UI on main thread
    @Override
    public void onDataReceived(@NonNull String data) {
@@ -380,7 +380,7 @@ if (ggWave.isListening()) {
 
 Your SDK now includes:
 - ✅ NFC functionality for contactless payments
-- ✅ GGWave sound-based data transmission
-- ✅ High-level workflow APIs
+- ✅ Sound-based data transmission (GGWave technology)
+- ✅ High-level device workflow APIs
 - ✅ Comprehensive examples and documentation
 - ✅ Easy integration and deployment 
