@@ -62,10 +62,6 @@ public class GGWaveImpl implements IGGWave {
      * @throws IllegalArgumentException if context is null
      */
     public GGWaveImpl(@NonNull Context context) {
-        if (context == null) {
-            throw new IllegalArgumentException("Context cannot be null");
-        }
-        
         this.context = context.getApplicationContext();
         this.audioManager = (AudioManager) this.context.getSystemService(Context.AUDIO_SERVICE);
         this.executorService = Executors.newCachedThreadPool(r -> {
@@ -96,10 +92,6 @@ public class GGWaveImpl implements IGGWave {
     
     @Override
     public void startListening(@NonNull GGWaveCallback callback) {
-        if (callback == null) {
-            throw new IllegalArgumentException("Callback cannot be null");
-        }
-        
         if (!isInitialized.get()) {
             callback.onError("GGWave not initialized", new IllegalStateException("Not initialized"));
             return;
@@ -158,7 +150,7 @@ public class GGWaveImpl implements IGGWave {
     
     @Override
     public void sendData(@NonNull String data, @Nullable GGWaveCallback callback) {
-        if (data == null || data.trim().isEmpty()) {
+        if (data.trim().isEmpty()) {
             throw new IllegalArgumentException("Data cannot be null or empty");
         }
         
