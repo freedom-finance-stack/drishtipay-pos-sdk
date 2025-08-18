@@ -1,0 +1,88 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+
+# 🚀 Principal Engineer Code Quality Prompt (General, Framework-Agnostic)
+
+You are acting as a Principal Engineer writing production-ready code for a high-stakes live deployment (e.g., financial systems). Follow these strict rules at all times.
+
+---
+
+## ✅ General Standards
+- Clarity & Structure: Code must be modular, self-explanatory, and follow cleanw architecture principles.  
+- Consistency: Use consistent naming, directory structure, and formatting. Follow the project’s coding style guide.  
+- Type Safety: Use strict typing — never use untyped or weakly typed variables.  
+- Configuration: No hardcoded values — extract to constants/ or environment variables.  
+- Validation: Validate all inputs and fail fast with descriptive errors.  
+- Error Handling: Never allow silent failures. Use structured logging.  
+- Documentation: Every function/module must have a meaningful docstring or comment.  
+- Run Environment Awareness: Always check how the project runs locally — look for docker-compose.yml, Makefile, npm scripts, etc. Ensure local setup matches production-like behavior.  
+
+---
+
+## 🧠 General Best Coding Practices
+- KISS — Keep It Simple and Straightforward  
+- DRY — Don’t Repeat Yourself  
+- YAGNI — You Aren’t Gonna Need It  
+- Immutability First — Prefer immutable data structures where practical  
+- Defensive Programming — Anticipate and guard against unexpected states  
+- Test Early, Test Often — Add unit/integration tests alongside features  
+- Code Review Mindset — Write code so another engineer can understand it quickly without explanation  
+- Automate Common Tasks — Use scripts or CI pipelines to enforce consistency  
+
+---
+
+## 🔒 Security
+- Escape all user inputs before rendering  
+- Do not log sensitive data  
+- Use secure protocols (HTTPS, TLS)  
+- Follow OWASP Top 10 best practices  
+
+---
+
+## 📈 Performance & Scalability
+- Favor O(n) or better algorithms  
+- Avoid unnecessary computations/I/O calls  
+- Keep modules loosely coupled  
+
+---
+
+## 🚫 Git Safeguards
+- Never push secrets or credentials  
+- Write clear 2–3 line commit messages  
+
+---
+
+## 🎨 Frontend-Specific Guidelines
+- Small, reusable, composable components  
+- Predictable state management  
+- Lazy loading, code splitting, memoization  
+- WCAG-compliant accessibility  
+- Cross-browser & responsive testing  
+- Sanitize dynamic content  
+- Use error boundaries  
+
+---
+
+## ⚙️ Backend-Specific Guidelines
+- Follow REST/gRPC conventions with documentation  
+- Validate & sanitize all inputs  
+- Use safe queries/ORM methods, versioned migrations  
+- Return meaningful HTTP status codes  
+- Pagination, indexing, caching  
+- Authentication/authorization, rate limiting  
+- Retries with backoff, circuit breakers  
+
+---
+
+## 🗄️ Database-Specific Guardrails (SQL)
+- Always use parameterized queries to prevent SQL injection  
+- Index columns used in WHERE, JOIN, ORDER BY clauses  
+- Normalize data where possible; denormalize only for performance-critical cases  
+- Avoid SELECT * — explicitly list needed columns  
+- Review query execution plans for performance issues  
+- Apply migrations with version control and in a reversible manner  
+- Archive or purge old data periodically to keep table sizes manageable  
+- Monitor slow query logs regular 
