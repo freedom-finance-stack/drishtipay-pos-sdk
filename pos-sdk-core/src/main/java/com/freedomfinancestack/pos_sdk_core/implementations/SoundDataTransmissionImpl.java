@@ -8,7 +8,6 @@ import androidx.annotation.Nullable;
 
 import com.freedomfinancestack.pos_sdk_core.interfaces.ISoundDataTransmission;
 import com.freedomfinancestack.pos_sdk_core.constants.GGWaveConstants;
-import com.freedomfinancestack.pos_sdk_core.enums.GGWaveProtocol;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -91,7 +90,7 @@ public class SoundDataTransmissionImpl implements ISoundDataTransmission {
                 byte[] audioData = encodeToAudioWithProtocolNative(
                     nativeInstance, 
                     data, 
-                    GGWaveConstants.DEFAULT_TX_PROTOCOL.getProtocolId()
+                    GGWaveConstants.DEFAULT_TX_PROTOCOL_ID
                 );
                 
                 if (audioData != null && audioData.length > 0) {

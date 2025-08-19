@@ -17,14 +17,14 @@ Java_com_freedomfinancestack_pos_1sdk_1core_implementations_SoundDataTransmissio
         JNIEnv *env, jobject thiz, jint sampleRate, jint samplesPerFrame) {
     
     try {
-        ggwave::Parameters params;
+        GGWave::Parameters params;
         params.sampleRateInp = sampleRate;
         params.sampleRateOut = sampleRate;
         params.samplesPerFrame = samplesPerFrame;
         params.sampleFormatInp = GGWAVE_SAMPLE_FORMAT_F32;
         params.sampleFormatOut = GGWAVE_SAMPLE_FORMAT_F32;
         
-        auto* instance = new ggwave::GGWave(params);
+        auto* instance = new GGWave(params);
         
         LOGI("GGWave instance created successfully with sampleRate=%d, samplesPerFrame=%d", 
              sampleRate, samplesPerFrame);
@@ -48,7 +48,7 @@ Java_com_freedomfinancestack_pos_1sdk_1core_implementations_SoundDataTransmissio
         return;
     }
     
-    auto* instance = reinterpret_cast<ggwave::GGWave*>(instancePtr);
+    auto* instance = reinterpret_cast<GGWave*>(instancePtr);
     
     try {
         // GGWave doesn't have explicit start/stop listening - it processes audio frames
@@ -89,7 +89,7 @@ Java_com_freedomfinancestack_pos_1sdk_1core_implementations_SoundDataTransmissio
         return nullptr;
     }
     
-    auto* instance = reinterpret_cast<ggwave::GGWave*>(instancePtr);
+    auto* instance = reinterpret_cast<GGWave*>(instancePtr);
     
     try {
         // Note: In a real implementation, you would capture audio from microphone
@@ -129,7 +129,7 @@ Java_com_freedomfinancestack_pos_1sdk_1core_implementations_SoundDataTransmissio
         return nullptr;
     }
     
-    auto* instance = reinterpret_cast<ggwave::GGWave*>(instancePtr);
+    auto* instance = reinterpret_cast<GGWave*>(instancePtr);
     
     try {
         // Convert Java string to C++ string
@@ -140,28 +140,34 @@ Java_com_freedomfinancestack_pos_1sdk_1core_implementations_SoundDataTransmissio
         LOGI("Encoding data: %s", dataToEncode.substr(0, 20).c_str());
         
         // Encode the data using default protocol (can be parameterized later)
-        ggwave::TxRxData txData(dataToEncode.begin(), dataToEncode.end());
-        auto waveform = instance->encode(txData);
+        // Initialize transmission with data using default protocol
+        if (!instance->init(dataToEncode.c_str(), GGWAVE_PROTOCOL_ULTRASOUND_FASTEST)) {
+            LOGE("Failed to initialize transmission");
+            return nullptr;
+        }
         
-        if (waveform.empty()) {
+        // Encode the data into audio waveform
+        uint32_t waveformSize = instance->encode();
+        
+        if (waveformSize == 0) {
             LOGE("Failed to encode data to waveform");
             return nullptr;
         }
         
-        // Convert float waveform to byte array for Android AudioTrack
-        size_t numSamples = waveform.size();
-        size_t bytesSize = numSamples * sizeof(float);
+        // Get the waveform data
+        const void* waveformData = instance->txWaveform();
         
-        jbyteArray result = env->NewByteArray(bytesSize);
+        // Convert float waveform to byte array for Android AudioTrack
+        jbyteArray result = env->NewByteArray(waveformSize);
         if (result == nullptr) {
             LOGE("Failed to allocate byte array");
             return nullptr;
         }
         
-        env->SetByteArrayRegion(result, 0, bytesSize, 
-                               reinterpret_cast<const jbyte*>(waveform.data()));
+        env->SetByteArrayRegion(result, 0, waveformSize, 
+                               reinterpret_cast<const jbyte*>(waveformData));
         
-        LOGI("Successfully encoded data to %zu samples", numSamples);
+        LOGI("Successfully encoded data to %d bytes", waveformSize);
         return result;
         
     } catch (const std::exception& e) {
@@ -187,7 +193,7 @@ Java_com_freedomfinancestack_pos_1sdk_1core_implementations_SoundDataTransmissio
         return nullptr;
     }
     
-    auto* instance = reinterpret_cast<ggwave::GGWave*>(instancePtr);
+    auto* instance = reinterpret_cast<GGWave*>(instancePtr);
     
     try {
         // Convert Java string to C++ string
@@ -198,7 +204,7 @@ Java_com_freedomfinancestack_pos_1sdk_1core_implementations_SoundDataTransmissio
         LOGI("Encoding data with protocol %d: %s", protocolId, dataToEncode.substr(0, 20).c_str());
         
         // Map protocol ID to GGWave protocol
-        ggwave::ProtocolId ggwaveProtocol;
+        GGWave::ProtocolId ggwaveProtocol;
         switch (protocolId) {
             case 0: ggwaveProtocol = GGWAVE_PROTOCOL_AUDIBLE_NORMAL; break;
             case 1: ggwaveProtocol = GGWAVE_PROTOCOL_AUDIBLE_FAST; break;
@@ -215,28 +221,34 @@ Java_com_freedomfinancestack_pos_1sdk_1core_implementations_SoundDataTransmissio
         }
         
         // Encode the data using specified protocol
-        ggwave::TxRxData txData(dataToEncode.begin(), dataToEncode.end());
-        auto waveform = instance->encode(txData, ggwaveProtocol, 10); // 10 volume level
+        // Initialize transmission with data and specified protocol
+        if (!instance->init(dataToEncode.c_str(), ggwaveProtocol, 10)) {
+            LOGE("Failed to initialize transmission with protocol %d", protocolId);
+            return nullptr;
+        }
         
-        if (waveform.empty()) {
+        // Encode the data into audio waveform
+        uint32_t waveformSize = instance->encode();
+        
+        if (waveformSize == 0) {
             LOGE("Failed to encode data to waveform with protocol %d", protocolId);
             return nullptr;
         }
         
-        // Convert float waveform to byte array
-        size_t numSamples = waveform.size();
-        size_t bytesSize = numSamples * sizeof(float);
+        // Get the waveform data
+        const void* waveformData = instance->txWaveform();
         
-        jbyteArray result = env->NewByteArray(bytesSize);
+        // Convert float waveform to byte array
+        jbyteArray result = env->NewByteArray(waveformSize);
         if (result == nullptr) {
             LOGE("Failed to allocate byte array");
             return nullptr;
         }
         
-        env->SetByteArrayRegion(result, 0, bytesSize, 
-                               reinterpret_cast<const jbyte*>(waveform.data()));
+        env->SetByteArrayRegion(result, 0, waveformSize, 
+                               reinterpret_cast<const jbyte*>(waveformData));
         
-        LOGI("Successfully encoded data to %zu samples with protocol %d", numSamples, protocolId);
+        LOGI("Successfully encoded data to %d bytes with protocol %d", waveformSize, protocolId);
         return result;
         
     } catch (const std::exception& e) {
@@ -258,7 +270,7 @@ Java_com_freedomfinancestack_pos_1sdk_1core_implementations_SoundDataTransmissio
     }
     
     try {
-        auto* instance = reinterpret_cast<ggwave::GGWave*>(instancePtr);
+        auto* instance = reinterpret_cast<GGWave*>(instancePtr);
         delete instance;
         LOGI("GGWave instance cleaned up successfully");
     } catch (const std::exception& e) {
