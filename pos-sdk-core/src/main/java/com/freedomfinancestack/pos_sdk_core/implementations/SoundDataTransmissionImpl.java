@@ -85,6 +85,14 @@ public class SoundDataTransmissionImpl implements ISoundDataTransmission {
         
         executor.execute(() -> {
             try {
+                if (nativeInstance < 0) {
+                    Log.e(TAG, "Native instance not initialized: " + nativeInstance);
+                    if (callback != null) {
+                        callback.onError("Native instance not initialized");
+                    }
+                    return;
+                }
+                
                 Log.d(TAG, "Sending data: " + truncateForLog(data));
                 
                 byte[] audioData = encodeToAudioWithProtocolNative(
@@ -151,7 +159,12 @@ public class SoundDataTransmissionImpl implements ISoundDataTransmission {
                 GGWaveConstants.SAMPLE_RATE, 
                 GGWaveConstants.SAMPLES_PER_FRAME
             );
-            Log.d(TAG, "GGWave initialized successfully");
+            
+            if (nativeInstance < 0) {
+                throw new RuntimeException("Native initialization returned invalid instance: " + nativeInstance);
+            }
+            
+            Log.d(TAG, "GGWave initialized successfully with instance: " + nativeInstance);
         } catch (Exception e) {
             Log.e(TAG, "Failed to initialize GGWave", e);
             throw new RuntimeException("GGWave initialization failed", e);

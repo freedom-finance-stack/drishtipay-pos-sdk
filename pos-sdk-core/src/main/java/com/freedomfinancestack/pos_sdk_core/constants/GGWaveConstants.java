@@ -13,9 +13,9 @@ public class GGWaveConstants {
     public static final int SAMPLE_RATE = 48000;
     public static final int SAMPLES_PER_FRAME = 1024;
     public static final float DEFAULT_VOLUME = 0.5f;
-    // Use ULTRASOUND_FASTEST protocol (ID=5) for both TX and RX
-    public static final int DEFAULT_TX_PROTOCOL_ID = 5; // GGWAVE_PROTOCOL_ULTRASOUND_FASTEST
-    public static final int DEFAULT_RX_PROTOCOL_ID = 5; // GGWAVE_PROTOCOL_ULTRASOUND_FASTEST
+    // Use AUDIBLE_FAST protocol (ID=1) like official ggwave-java reference
+    public static final int DEFAULT_TX_PROTOCOL_ID = 1; // GGWAVE_TX_PROTOCOL_AUDIBLE_FAST 
+    public static final int DEFAULT_RX_PROTOCOL_ID = 1; // GGWAVE_TX_PROTOCOL_AUDIBLE_FAST
     public static final String THREAD_NAME_PREFIX = "GGWave-Worker";
     public static final long AUDIO_CAPTURE_DELAY_MS = 50;
     public static final int LOG_DATA_TRUNCATE_LENGTH = 20;

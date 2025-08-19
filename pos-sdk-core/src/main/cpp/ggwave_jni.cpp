@@ -1,7 +1,9 @@
 #include <jni.h>
 #include <string>
 #include <android/log.h>
-#include <ggwave/ggwave.h>
+#include <cstring>
+
+#include "ggwave/include/ggwave/ggwave.h"
 
 #define LOG_TAG "GGWave-JNI"
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
@@ -10,26 +12,35 @@
 extern "C" {
 
 /**
- * Initialize GGWave instance
+ * Initialize GGWave instance using C API (like official ggwave-java)
  */
 JNIEXPORT jlong JNICALL
 Java_com_freedomfinancestack_pos_1sdk_1core_implementations_SoundDataTransmissionImpl_initializeNative(
         JNIEnv *env, jobject thiz, jint sampleRate, jint samplesPerFrame) {
     
     try {
-        GGWave::Parameters params;
-        params.sampleRateInp = sampleRate;
-        params.sampleRateOut = sampleRate;
-        params.samplesPerFrame = samplesPerFrame;
-        params.sampleFormatInp = GGWAVE_SAMPLE_FORMAT_F32;
-        params.sampleFormatOut = GGWAVE_SAMPLE_FORMAT_F32;
+        // Use C API like official ggwave-java implementation
+        ggwave_Parameters parameters = ggwave_getDefaultParameters();
+        parameters.sampleFormatInp = GGWAVE_SAMPLE_FORMAT_I16;
+        parameters.sampleFormatOut = GGWAVE_SAMPLE_FORMAT_I16;
+        parameters.sampleRateInp = sampleRate;
+        parameters.sampleRateOut = sampleRate;
+        parameters.samplesPerFrame = samplesPerFrame;
         
-        auto* instance = new GGWave(params);
+        ggwave_Instance instance = ggwave_init(parameters);
         
-        LOGI("GGWave instance created successfully with sampleRate=%d, samplesPerFrame=%d", 
-             sampleRate, samplesPerFrame);
+        LOGI("ggwave_init returned instance ID: %d", instance);
         
-        return reinterpret_cast<jlong>(instance);
+        if (instance < 0) {
+            LOGE("Failed to initialize ggwave instance (returned %d)", instance);
+            return 0;
+        }
+        
+        LOGI("GGWave instance created successfully with sampleRate=%d, samplesPerFrame=%d, instance=%d", 
+             sampleRate, samplesPerFrame, instance);
+        
+        return static_cast<jlong>(instance);
+        
     } catch (const std::exception& e) {
         LOGE("Failed to create GGWave instance: %s", e.what());
         return 0;
@@ -43,19 +54,13 @@ JNIEXPORT void JNICALL
 Java_com_freedomfinancestack_pos_1sdk_1core_implementations_SoundDataTransmissionImpl_startListeningNative(
         JNIEnv *env, jobject thiz, jlong instancePtr) {
     
-    if (instancePtr == 0) {
-        LOGE("Invalid GGWave instance pointer");
+    if (instancePtr < 0) {
+        LOGE("Invalid GGWave instance pointer: %ld", instancePtr);
         return;
     }
     
-    auto* instance = reinterpret_cast<GGWave*>(instancePtr);
-    
-    try {
-        // GGWave doesn't have explicit start/stop listening - it processes audio frames
-        LOGI("GGWave listening started");
-    } catch (const std::exception& e) {
-        LOGE("Error starting GGWave listening: %s", e.what());
-    }
+    LOGI("Starting to listen for transmissions");
+    // Note: In C API, listening is handled by continuously calling decode on captured audio
 }
 
 /**
@@ -65,196 +70,121 @@ JNIEXPORT void JNICALL
 Java_com_freedomfinancestack_pos_1sdk_1core_implementations_SoundDataTransmissionImpl_stopListeningNative(
         JNIEnv *env, jobject thiz, jlong instancePtr) {
     
-    if (instancePtr == 0) {
-        LOGE("Invalid GGWave instance pointer");
+    if (instancePtr < 0) {
+        LOGE("Invalid GGWave instance pointer: %ld", instancePtr);
         return;
     }
     
-    try {
-        LOGI("GGWave listening stopped");
-    } catch (const std::exception& e) {
-        LOGE("Error stopping GGWave listening: %s", e.what());
-    }
+    LOGI("Stopping transmission listening");
+    // Note: In C API, stopping is handled by stopping the audio capture in Java
 }
 
 /**
- * Capture and decode audio data
+ * Decode captured audio data using C API
+ * Note: This is a simplified version - in a full implementation, you would
+ * need to integrate with Android's AudioRecord API to capture real audio data
  */
 JNIEXPORT jstring JNICALL
 Java_com_freedomfinancestack_pos_1sdk_1core_implementations_SoundDataTransmissionImpl_captureAndDecodeNative(
         JNIEnv *env, jobject thiz, jlong instancePtr) {
     
-    if (instancePtr == 0) {
-        LOGE("Invalid GGWave instance pointer");
+    if (instancePtr < 0) {
+        LOGE("Invalid GGWave instance pointer: %ld", instancePtr);
         return nullptr;
     }
     
-    auto* instance = reinterpret_cast<GGWave*>(instancePtr);
+    // Note: In a real implementation, this would capture audio from microphone
+    // and call ggwave_decode with the captured data. For now, we return null
+    // to indicate no data received.
     
-    try {
-        // Note: In a real implementation, you would capture audio from microphone
-        // and pass the audio frames to GGWave for decoding
-        // For now, return null as no data is captured
-        
-        // Example of how to process audio frames:
-        // std::vector<float> audioFrame(samplesPerFrame);
-        // // Fill audioFrame with captured audio data
-        // ggwave::TxRxData result = instance->decode(audioFrame);
-        // if (!result.empty()) {
-        //     std::string decoded(result.begin(), result.end());
-        //     return env->NewStringUTF(decoded.c_str());
-        // }
-        
-        return nullptr;
-    } catch (const std::exception& e) {
-        LOGE("Error capturing/decoding audio: %s", e.what());
-        return nullptr;
-    }
+    return nullptr;
 }
 
 /**
- * Encode data to audio
- */
-JNIEXPORT jbyteArray JNICALL
-Java_com_freedomfinancestack_pos_1sdk_1core_implementations_SoundDataTransmissionImpl_encodeToAudioNative(
-        JNIEnv *env, jobject thiz, jlong instancePtr, jstring data) {
-    
-    if (instancePtr == 0) {
-        LOGE("Invalid GGWave instance pointer");
-        return nullptr;
-    }
-    
-    if (data == nullptr) {
-        LOGE("Data string is null");
-        return nullptr;
-    }
-    
-    auto* instance = reinterpret_cast<GGWave*>(instancePtr);
-    
-    try {
-        // Convert Java string to C++ string
-        const char* dataStr = env->GetStringUTFChars(data, nullptr);
-        std::string dataToEncode(dataStr);
-        env->ReleaseStringUTFChars(data, dataStr);
-        
-        LOGI("Encoding data: %s", dataToEncode.substr(0, 20).c_str());
-        
-        // Encode the data using default protocol (can be parameterized later)
-        // Initialize transmission with data using default protocol
-        if (!instance->init(dataToEncode.c_str(), GGWAVE_PROTOCOL_ULTRASOUND_FASTEST)) {
-            LOGE("Failed to initialize transmission");
-            return nullptr;
-        }
-        
-        // Encode the data into audio waveform
-        uint32_t waveformSize = instance->encode();
-        
-        if (waveformSize == 0) {
-            LOGE("Failed to encode data to waveform");
-            return nullptr;
-        }
-        
-        // Get the waveform data
-        const void* waveformData = instance->txWaveform();
-        
-        // Convert float waveform to byte array for Android AudioTrack
-        jbyteArray result = env->NewByteArray(waveformSize);
-        if (result == nullptr) {
-            LOGE("Failed to allocate byte array");
-            return nullptr;
-        }
-        
-        env->SetByteArrayRegion(result, 0, waveformSize, 
-                               reinterpret_cast<const jbyte*>(waveformData));
-        
-        LOGI("Successfully encoded data to %d bytes", waveformSize);
-        return result;
-        
-    } catch (const std::exception& e) {
-        LOGE("Error encoding data to audio: %s", e.what());
-        return nullptr;
-    }
-}
-
-/**
- * Encode data with specific protocol
+ * Encode data to audio using C API (like official ggwave-java)
  */
 JNIEXPORT jbyteArray JNICALL
 Java_com_freedomfinancestack_pos_1sdk_1core_implementations_SoundDataTransmissionImpl_encodeToAudioWithProtocolNative(
         JNIEnv *env, jobject thiz, jlong instancePtr, jstring data, jint protocolId) {
     
-    if (instancePtr == 0) {
-        LOGE("Invalid GGWave instance pointer");
+    if (instancePtr < 0) {
+        LOGE("Invalid GGWave instance pointer: %ld", instancePtr);
         return nullptr;
     }
     
-    if (data == nullptr) {
-        LOGE("Data string is null");
+    ggwave_Instance instance = static_cast<ggwave_Instance>(instancePtr);
+    
+    const char* dataToEncode = env->GetStringUTFChars(data, nullptr);
+    int dataLength = env->GetStringLength(data);
+    
+    if (dataToEncode == nullptr) {
+        LOGE("Failed to get string data");
         return nullptr;
     }
-    
-    auto* instance = reinterpret_cast<GGWave*>(instancePtr);
     
     try {
-        // Convert Java string to C++ string
-        const char* dataStr = env->GetStringUTFChars(data, nullptr);
-        std::string dataToEncode(dataStr);
-        env->ReleaseStringUTFChars(data, dataStr);
+        LOGI("Encoding data with protocol %d: %s", protocolId, dataToEncode);
         
-        LOGI("Encoding data with protocol %d: %s", protocolId, dataToEncode.substr(0, 20).c_str());
+        // Two-step encoding like official ggwave-java
+        // Step 1: Get the required buffer size
+        const int bufferSize = ggwave_encode(instance, dataToEncode, dataLength, static_cast<ggwave_ProtocolId>(protocolId), 10, nullptr, 1);
         
-        // Map protocol ID to GGWave protocol
-        GGWave::ProtocolId ggwaveProtocol;
-        switch (protocolId) {
-            case 0: ggwaveProtocol = GGWAVE_PROTOCOL_AUDIBLE_NORMAL; break;
-            case 1: ggwaveProtocol = GGWAVE_PROTOCOL_AUDIBLE_FAST; break;
-            case 2: ggwaveProtocol = GGWAVE_PROTOCOL_AUDIBLE_FASTEST; break;
-            case 3: ggwaveProtocol = GGWAVE_PROTOCOL_ULTRASOUND_NORMAL; break;
-            case 4: ggwaveProtocol = GGWAVE_PROTOCOL_ULTRASOUND_FAST; break;
-            case 5: ggwaveProtocol = GGWAVE_PROTOCOL_ULTRASOUND_FASTEST; break;
-            case 6: ggwaveProtocol = GGWAVE_PROTOCOL_DT_NORMAL; break;
-            case 7: ggwaveProtocol = GGWAVE_PROTOCOL_DT_FAST; break;
-            case 8: ggwaveProtocol = GGWAVE_PROTOCOL_DT_FASTEST; break;
-            default:
-                LOGE("Unknown protocol ID: %d", protocolId);
-                return nullptr;
-        }
-        
-        // Encode the data using specified protocol
-        // Initialize transmission with data and specified protocol
-        if (!instance->init(dataToEncode.c_str(), ggwaveProtocol, 10)) {
-            LOGE("Failed to initialize transmission with protocol %d", protocolId);
+        if (bufferSize <= 0) {
+            LOGE("Failed to get buffer size for encoding with protocol %d", protocolId);
+            env->ReleaseStringUTFChars(data, dataToEncode);
             return nullptr;
         }
         
-        // Encode the data into audio waveform
-        uint32_t waveformSize = instance->encode();
+        // Step 2: Get the actual waveform data
+        char* waveform = new char[bufferSize];
+        const int actualSize = ggwave_encode(instance, dataToEncode, dataLength, static_cast<ggwave_ProtocolId>(protocolId), 10, waveform, 0);
         
-        if (waveformSize == 0) {
-            LOGE("Failed to encode data to waveform with protocol %d", protocolId);
+        if (actualSize != bufferSize) {
+            LOGE("Encoding size mismatch: expected %d bytes, got %d bytes", bufferSize, actualSize);
+            delete[] waveform;
+            env->ReleaseStringUTFChars(data, dataToEncode);
             return nullptr;
         }
         
-        // Get the waveform data
-        const void* waveformData = instance->txWaveform();
-        
-        // Convert float waveform to byte array
-        jbyteArray result = env->NewByteArray(waveformSize);
+        // Convert to byte array (I16 samples)
+        jbyteArray result = env->NewByteArray(bufferSize);
         if (result == nullptr) {
             LOGE("Failed to allocate byte array");
+            delete[] waveform;
+            env->ReleaseStringUTFChars(data, dataToEncode);
             return nullptr;
         }
         
-        env->SetByteArrayRegion(result, 0, waveformSize, 
-                               reinterpret_cast<const jbyte*>(waveformData));
+        env->SetByteArrayRegion(result, 0, bufferSize, reinterpret_cast<const jbyte*>(waveform));
         
-        LOGI("Successfully encoded data to %d bytes with protocol %d", waveformSize, protocolId);
+        LOGI("Successfully encoded data to %d bytes (%d samples) with protocol %d", bufferSize, actualSize, protocolId);
+        
+        delete[] waveform;
+        env->ReleaseStringUTFChars(data, dataToEncode);
         return result;
         
     } catch (const std::exception& e) {
-        LOGE("Error encoding data to audio with protocol: %s", e.what());
+        LOGE("Exception during encoding: %s", e.what());
+        env->ReleaseStringUTFChars(data, dataToEncode);
         return nullptr;
     }
+}
+
+/**
+ * Get the transmission waveform data
+ */
+JNIEXPORT jbyteArray JNICALL
+Java_com_freedomfinancestack_pos_1sdk_1core_implementations_SoundDataTransmissionImpl_getTxWaveformNative(
+        JNIEnv *env, jobject thiz, jlong instancePtr) {
+    
+    if (instancePtr < 0) {
+        LOGE("Invalid GGWave instance pointer: %ld", instancePtr);
+        return nullptr;
+    }
+    
+    // Note: In C API, waveform data is returned directly from encode function
+    LOGI("getTxWaveform called - data returned from encode function");
+    return nullptr;
 }
 
 /**
@@ -265,17 +195,14 @@ Java_com_freedomfinancestack_pos_1sdk_1core_implementations_SoundDataTransmissio
         JNIEnv *env, jobject thiz, jlong instancePtr) {
     
     if (instancePtr == 0) {
-        LOGE("Invalid GGWave instance pointer");
+        LOGE("Invalid GGWave instance pointer for cleanup");
         return;
     }
     
-    try {
-        auto* instance = reinterpret_cast<GGWave*>(instancePtr);
-        delete instance;
-        LOGI("GGWave instance cleaned up successfully");
-    } catch (const std::exception& e) {
-        LOGE("Error cleaning up GGWave instance: %s", e.what());
-    }
+    ggwave_Instance instance = static_cast<ggwave_Instance>(instancePtr);
+    ggwave_free(instance);
+    
+    LOGI("GGWave instance cleaned up successfully");
 }
 
 } // extern "C"

@@ -2,10 +2,14 @@
 
 package com.freedomfinancestack.razorpay_drishtipay_test
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.nfc.NdefMessage
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -14,6 +18,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.material3.TextField
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -24,6 +30,8 @@ import com.freedomfinancestack.pos_sdk_core.implementations.PosNfcDeviceManager
 import com.freedomfinancestack.pos_sdk_core.interfaces.INfcDeviceManager
 import com.freedomfinancestack.pos_sdk_core.models.Card
 import com.freedomfinancestack.pos_sdk_core.implementations.NarratorImpl
+import com.freedomfinancestack.pos_sdk_core.implementations.SoundDataTransmissionImpl
+import com.freedomfinancestack.pos_sdk_core.interfaces.ISoundDataTransmission
 import com.freedomfinancestack.razorpay_drishtipay_test.payment.InitiatePayment
 import com.freedomfinancestack.razorpay_drishtipay_test.pos.PaxNeptuneLitePlugin
 import com.freedomfinancestack.razorpay_drishtipay_test.savedcards.ListSavedCards
@@ -31,16 +39,27 @@ import com.freedomfinancestack.razorpay_drishtipay_test.ui.theme.Razorpaydrishti
 
 class MainActivity : ComponentActivity() {
     
+    companion object {
+        private const val RECORD_AUDIO_PERMISSION_CODE = 1001
+    }
+    
     private lateinit var nfcManager: INfcDeviceManager
     private lateinit var paxPlugin: PaxNeptuneLitePlugin
     private lateinit var cardsService: ListSavedCards
     private lateinit var paymentService: InitiatePayment
     private lateinit var narrator: NarratorImpl
+    private lateinit var soundTransmission: ISoundDataTransmission
     private var isListening = mutableStateOf(false)
     private var sdkStatus = mutableStateOf("Not Initialized")
     private var lastPaymentData = mutableStateOf("No payments processed")
     private var pluginMode = mutableStateOf("Mock Mode")
     private var logMessages = mutableStateOf(listOf<String>())
+    
+    // Sound transmission debug states
+    private var soundTransmissionText = mutableStateOf("Hello from POS!")
+    private var soundTransmissionStatus = mutableStateOf("Ready")
+    private var soundReceivedData = mutableStateOf("")
+    private var isSoundListening = mutableStateOf(false)
 
     // These will be managed inside Composable
     @Volatile
@@ -150,6 +169,9 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
+                // Sound Transmission Debug Section
+                SoundTransmissionDebugSection()
+
                 // 🚫 COMMENTED OUT - NOT NEEDED FOR TARUN'S PAYMENT TEST
                 /*
                 // SDK Status Card
@@ -167,6 +189,102 @@ class MainActivity : ComponentActivity() {
                 // Logs Section
                 LogsSection()
                 */
+            }
+        }
+    }
+
+    @Composable
+    fun SoundTransmissionDebugSection() {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = "🔊 Sound Transmission Debug",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+                
+                // Status
+                Text(
+                    text = "Status: ${soundTransmissionStatus.value}",
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+                
+                // Input text field for data to send
+                OutlinedTextField(
+                    value = soundTransmissionText.value,
+                    onValueChange = { soundTransmissionText.value = it },
+                    label = { Text("Data to send via sound") },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("Enter message to transmit...") }
+                )
+                
+                // Buttons row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    // Send button
+                    Button(
+                        onClick = { sendSoundData() },
+                        modifier = Modifier.weight(1f),
+                        enabled = soundTransmissionStatus.value == "Initialized" || soundTransmissionStatus.value == "Ready"
+                    ) {
+                        Text("Send Data")
+                    }
+                    
+                    // Listen/Stop button
+                    Button(
+                        onClick = { 
+                            if (isSoundListening.value) {
+                                stopSoundListening()
+                            } else {
+                                startSoundListening()
+                            }
+                        },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (isSoundListening.value) 
+                                MaterialTheme.colorScheme.error 
+                            else MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Text(if (isSoundListening.value) "Stop Listen" else "Start Listen")
+                    }
+                }
+                
+                // Received data display
+                if (soundReceivedData.value.isNotEmpty()) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(12.dp)
+                        ) {
+                            Text(
+                                text = "📥 Received Data:",
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = soundReceivedData.value,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
+                    }
+                }
             }
         }
     }
@@ -680,9 +798,14 @@ class MainActivity : ComponentActivity() {
             // Initialize payment service
             paymentService = InitiatePayment()
 
+            // Initialize sound transmission
+            soundTransmission = SoundDataTransmissionImpl(this)
+            soundTransmissionStatus.value = "Initialized"
+
             sdkStatus.value = "Initialized Successfully"
             pluginMode.value = "Mock Mode"
             addLog("✅ DrishtiPay POS SDK initialized successfully!")
+            addLog("🔊 Sound transmission API ready!")
             addLog("📱 Ready for emulator testing with mock NFC simulation")
             
         } catch (e: Exception) {
@@ -1048,15 +1171,179 @@ class MainActivity : ComponentActivity() {
         }.start()
     }
     
+    // Sound transmission functions
+    private fun sendSoundData() {
+        try {
+            // Check for RECORD_AUDIO permission first
+            if (!hasRecordAudioPermission()) {
+                requestRecordAudioPermission()
+                return
+            }
+            
+            val dataToSend = soundTransmissionText.value.trim()
+            if (dataToSend.isEmpty()) {
+                Toast.makeText(this, "Please enter some data to send", Toast.LENGTH_SHORT).show()
+                return
+            }
+            
+            if (dataToSend.length > 140) {
+                Toast.makeText(this, "Data too long! Maximum 140 characters", Toast.LENGTH_SHORT).show()
+                return
+            }
+            
+            soundTransmissionStatus.value = "Sending..."
+            addLog("🔊 Sending via sound: $dataToSend")
+            
+            soundTransmission.send(dataToSend, object : ISoundDataTransmission.SoundCallback {
+                override fun onReceived(data: String) {
+                    // Not used when sending
+                }
+                
+                override fun onSent(data: String) {
+                    runOnUiThread {
+                        soundTransmissionStatus.value = "Sent successfully!"
+                        addLog("✅ Sound data sent: $data")
+                        Toast.makeText(this@MainActivity, "Data sent via sound!", Toast.LENGTH_SHORT).show()
+                        
+                        // Reset status after a delay
+                        android.os.Handler(mainLooper).postDelayed({
+                            soundTransmissionStatus.value = "Ready"
+                        }, 2000)
+                    }
+                }
+                
+                override fun onError(error: String) {
+                    runOnUiThread {
+                        soundTransmissionStatus.value = "Send failed"
+                        addLog("❌ Sound transmission error: $error")
+                        Toast.makeText(this@MainActivity, "Send failed: $error", Toast.LENGTH_LONG).show()
+                        
+                        // Reset status after a delay
+                        android.os.Handler(mainLooper).postDelayed({
+                            soundTransmissionStatus.value = "Ready"
+                        }, 3000)
+                    }
+                }
+            })
+        } catch (e: Exception) {
+            soundTransmissionStatus.value = "Error"
+            addLog("❌ Failed to send sound data: ${e.message}")
+            Log.e("MainActivity", "Failed to send sound data", e)
+        }
+    }
+    
+    private fun startSoundListening() {
+        try {
+            // Check for RECORD_AUDIO permission first
+            if (!hasRecordAudioPermission()) {
+                requestRecordAudioPermission()
+                return
+            }
+            
+            isSoundListening.value = true
+            soundTransmissionStatus.value = "Listening..."
+            addLog("👂 Started listening for sound data...")
+            
+            soundTransmission.listen(object : ISoundDataTransmission.SoundCallback {
+                override fun onReceived(data: String) {
+                    runOnUiThread {
+                        soundReceivedData.value = data
+                        addLog("📥 Received via sound: $data")
+                        Toast.makeText(this@MainActivity, "Received: $data", Toast.LENGTH_LONG).show()
+                        
+                        // Speak the received data
+                        if (::narrator.isInitialized) {
+                            narrator.speak("Received data: $data")
+                        }
+                    }
+                }
+                
+                override fun onSent(data: String) {
+                    // Not used when listening
+                }
+                
+                override fun onError(error: String) {
+                    runOnUiThread {
+                        addLog("❌ Sound listening error: $error")
+                        Toast.makeText(this@MainActivity, "Listen error: $error", Toast.LENGTH_LONG).show()
+                    }
+                }
+            })
+        } catch (e: Exception) {
+            isSoundListening.value = false
+            soundTransmissionStatus.value = "Error"
+            addLog("❌ Failed to start sound listening: ${e.message}")
+            Log.e("MainActivity", "Failed to start sound listening", e)
+        }
+    }
+    
+    private fun stopSoundListening() {
+        try {
+            isSoundListening.value = false
+            soundTransmissionStatus.value = "Ready"
+            addLog("🔇 Stopped sound listening")
+            
+            soundTransmission.stop()
+            
+            Toast.makeText(this, "Stopped listening", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            addLog("❌ Failed to stop sound listening: ${e.message}")
+            Log.e("MainActivity", "Failed to stop sound listening", e)
+        }
+    }
+    
+    // Permission handling functions
+    private fun hasRecordAudioPermission(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.RECORD_AUDIO
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+    
+    private fun requestRecordAudioPermission() {
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(Manifest.permission.RECORD_AUDIO),
+            RECORD_AUDIO_PERMISSION_CODE
+        )
+    }
+    
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        
+        when (requestCode) {
+            RECORD_AUDIO_PERMISSION_CODE -> {
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    addLog("🎤 Audio permission granted!")
+                    Toast.makeText(this, "Audio permission granted. You can now use sound transmission.", Toast.LENGTH_LONG).show()
+                    soundTransmissionStatus.value = "Ready"
+                } else {
+                    addLog("❌ Audio permission denied!")
+                    Toast.makeText(this, "Audio permission required for sound transmission", Toast.LENGTH_LONG).show()
+                    soundTransmissionStatus.value = "Permission Required"
+                }
+            }
+        }
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         // Clean up SDK resources
         try {
-        if (::nfcManager.isInitialized) {
-            nfcManager.stopListening()
-            if (nfcManager is PosNfcDeviceManager) {
-                (nfcManager as PosNfcDeviceManager).cleanup()
+            // Clean up sound transmission
+            if (::soundTransmission.isInitialized) {
+                soundTransmission.stop()
             }
+            
+            if (::nfcManager.isInitialized) {
+                nfcManager.stopListening()
+                if (nfcManager is PosNfcDeviceManager) {
+                    (nfcManager as PosNfcDeviceManager).cleanup()
+                }
             }
             
             // Clean up narrator
