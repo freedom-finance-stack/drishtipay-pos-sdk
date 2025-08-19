@@ -32,24 +32,24 @@ DrishtiPay POS SDK is a production-ready Android library that enables seamless N
 │              Your POS App               │
 ├─────────────────────────────────────────┤
 │           DrishtiPay Core SDK           │
-│  ┌─────────────┐  ┌─────────────────┐  │
-│  │ Interfaces  │  │ Implementations │  │
-│  │             │  │                 │  │
-│  │ INfcDevice  │  │ PosNfcDevice    │  │
-│  │ Manager     │  │ Manager         │  │
-│  │             │  │                 │  │
-│  │ IPosNfc     │  │ Mock Plugin     │  │
-│  │ Plugin      │  │ (Testing)       │  │
-│  │             │  │                 │  │
-│  │ IPayment    │  │                 │  │
-│  │ ICards      │  │                 │  │
-│  └─────────────┘  └─────────────────┘  │
+│  ┌─────────────┐  ┌─────────────────┐   │
+│  │ Interfaces  │  │ Implementations │   │
+│  │             │  │                 │   │
+│  │ INfcDevice  │  │ PosNfcDevice    │   │
+│  │ Manager     │  │ Manager         │   │
+│  │             │  │                 │   │
+│  │ IPosNfc     │  │ Mock Plugin     │   │
+│  │ Plugin      │  │ (Testing)       │   │
+│  │             │  │                 │   │
+│  │ IPayment    │  │                 │   │
+│  │ ICards      │  │                 │   │
+│  └─────────────┘  └─────────────────┘   │
 ├─────────────────────────────────────────┤
 │        Manufacturer Plugins             │
-│  ┌─────────┐ ┌─────────┐ ┌─────────┐   │
-│  │   PAX   │ │Ingenico │ │Verifone │   │
-│  │ Plugin  │ │ Plugin  │ │ Plugin  │   │
-│  └─────────┘ └─────────┘ └─────────┘   │
+│  ┌─────────┐ ┌─────────┐ ┌─────────┐    │
+│  │   PAX   │ │Ingenico │ │Verifone │    │
+│  │ Plugin  │ │ Plugin  │ │ Plugin  │    │
+│  └─────────┘ └─────────┘ └─────────┘    │
 └─────────────────────────────────────────┘
 ```
 

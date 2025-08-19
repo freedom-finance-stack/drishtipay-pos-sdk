@@ -1,153 +1,114 @@
 package com.freedomfinancestack.pos_sdk_core.examples;
 
-import android.app.Activity;
-import android.nfc.NdefMessage;
-import android.os.Bundle;
+import android.content.Context;
 import android.util.Log;
-import android.widget.Toast;
 
-import com.freedomfinancestack.pos_sdk_core.implementations.PosNfcDeviceManager;
-import com.freedomfinancestack.pos_sdk_core.interfaces.INfcDeviceManager;
-import com.freedomfinancestack.pos_sdk_core.interfaces.IPosNfcPlugin;
+import androidx.annotation.NonNull;
+
+import com.freedomfinancestack.pos_sdk_core.interfaces.ISoundDataTransmission;
+import com.freedomfinancestack.pos_sdk_core.implementations.SoundDataTransmissionImpl;
 
 /**
- * Simple example showing how to use Universal POS NFC for payments.
+ * Simple example showing how to use sound data transmission in POS applications.
  * 
- * Shows two approaches:
- * 1. Mock mode (for testing without manufacturer SDK)
- * 2. Plugin mode (for production with manufacturer SDK)
- * 
- * Works with ANY POS manufacturer: PAX, Ingenico, Verifone, etc.
+ * This demonstrates the minimalistic API - just listen(), send(), and stop().
  */
-public class SimplePosExample extends Activity {
+public class SimplePosExample {
     
     private static final String TAG = "SimplePosExample";
     
-    private INfcDeviceManager nfcManager;
+    private ISoundDataTransmission soundTransmission;
     
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        
-        // Choose approach based on your setup:
-        
-        // APPROACH 1: Mock mode (for testing without manufacturer SDK)
-        setupMockMode();
-        
-        // APPROACH 2: Plugin mode (for production with manufacturer SDK)
-        // setupPluginMode();
-        
-        // Start payment session
-        startPayment();
+    /**
+     * Initialize sound transmission for POS operations.
+     * @param context Android application context
+     */
+    public void initialize(Context context) {
+        // Create sound transmission instance
+        soundTransmission = new SoundDataTransmissionImpl(context);
+        Log.d(TAG, "Sound transmission initialized for POS");
     }
     
     /**
-     * APPROACH 1: Mock mode for testing without manufacturer SDK
+     * Start listening for payment data from customer devices.
      */
-    private void setupMockMode() {
-        Log.d(TAG, "Setting up MOCK mode (no manufacturer SDK required)");
-        
-        // Simple constructor - uses built-in mock plugin
-        nfcManager = new PosNfcDeviceManager(this);
+    public void startListeningForPayments() {
+        soundTransmission.listen(new ISoundDataTransmission.SoundCallback() {
+            @Override
+            public void onReceived(@NonNull String data) {
+                Log.d(TAG, "Payment data received: " + data);
+                // Process payment data here
+                processPaymentData(data);
+            }
+            
+            @Override
+            public void onSent(@NonNull String data) {
+                // Not used when listening
+            }
+            
+            @Override
+            public void onError(@NonNull String error) {
+                Log.e(TAG, "Error receiving payment data: " + error);
+                // Handle error (retry, show message, etc.)
+            }
+        });
     }
     
     /**
-     * APPROACH 2: Plugin mode for production with manufacturer SDK
-     * Organizations uncomment this and provide their own plugin
+     * Send payment confirmation to customer device.
+     * @param confirmationData Payment confirmation or receipt data
      */
-    private void setupPluginMode() {
-        Log.d(TAG, "Setting up PLUGIN mode (requires manufacturer SDK)");
-        
-        // TODO: Organizations replace this with their actual plugin
-        /*
-        // Example with PAX Neptune Lite plugin:
-        IPosNfcPlugin paxPlugin = new NeptuneLitePlugin();
-        nfcManager = new PosNfcDeviceManager(this, paxPlugin);
-        
-        // Example with Ingenico plugin:
-        IPosNfcPlugin ingenicoPlugin = new IngenicoPlugin();
-        nfcManager = new PosNfcDeviceManager(this, ingenicoPlugin);
-        
-        // Example with Verifone plugin:
-        IPosNfcPlugin verifonePlugin = new VerifonePlugin();
-        nfcManager = new PosNfcDeviceManager(this, verifonePlugin);
-        */
-        
-        // For this example, we'll use mock mode
-        nfcManager = new PosNfcDeviceManager(this);
-        
-        showMessage("Plugin mode setup complete. Replace with real plugin for production.");
-    }
-    
-    private void startPayment() {
-        Log.d(TAG, "Starting payment session...");
-        
-        nfcManager.startListening(new INfcDeviceManager.NdefCallback() {
+    public void sendPaymentConfirmation(String confirmationData) {
+        soundTransmission.send(confirmationData, new ISoundDataTransmission.SoundCallback() {
             @Override
-            public void onNdefMessageDiscovered(NdefMessage message) {
-                Log.d(TAG, "Customer tapped phone - processing payment...");
-                processPayment(message);
+            public void onReceived(@NonNull String data) {
+                // Not used when sending
             }
             
             @Override
-            public void onError(String errorMessage) {
-                Log.e(TAG, "NFC Error: " + errorMessage);
-                showMessage("Payment failed: " + errorMessage);
+            public void onSent(@NonNull String data) {
+                Log.d(TAG, "Payment confirmation sent successfully");
+                // Update UI to show success
+            }
+            
+            @Override
+            public void onError(@NonNull String error) {
+                Log.e(TAG, "Failed to send confirmation: " + error);
+                // Handle error (retry, fallback method, etc.)
             }
         });
+    }
+    
+    /**
+     * Send data without status callback (fire-and-forget).
+     * @param data Data to send
+     */
+    public void sendQuickData(String data) {
+        soundTransmission.send(data);  // Simple, no callback
+    }
+    
+    /**
+     * Stop all sound operations when done.
+     */
+    public void cleanup() {
+        if (soundTransmission != null) {
+            soundTransmission.stop();
+            Log.d(TAG, "Sound transmission stopped");
+        }
+    }
+    
+    // Example payment processing
+    private void processPaymentData(String data) {
+        // In a real POS application, you would:
+        // 1. Parse the payment data (card info, amount, etc.)
+        // 2. Validate the data
+        // 3. Process the payment through your payment gateway
+        // 4. Send confirmation back to customer device
         
-        showMessage("Ready for customer to tap phone...");
-    }
-    
-    private void processPayment(NdefMessage message) {
-        try {
-            // Extract payment data from NDEF message
-            String paymentData = extractPaymentData(message);
-            
-            Log.d(TAG, "Processing payment: " + paymentData);
-            
-            // TODO: Process payment with your payment gateway
-            
-            // Simulate successful payment
-            showMessage("Payment successful! Amount processed.");
-            
-            // Stop listening after successful payment
-            nfcManager.stopListening();
-            
-        } catch (Exception e) {
-            Log.e(TAG, "Payment processing failed", e);
-            showMessage("Payment processing failed: " + e.getMessage());
-        }
-    }
-    
-    private String extractPaymentData(NdefMessage message) {
-        // Simple extraction - in real app, parse according to your protocol
-        if (message.getRecords().length > 0) {
-            byte[] payload = message.getRecords()[0].getPayload();
-            return new String(payload);
-        }
-        return "No payment data found";
-    }
-    
-    private void showMessage(String message) {
-        runOnUiThread(() -> {
-            Toast.makeText(this, message, Toast.LENGTH_LONG).show();
-            Log.d(TAG, "Message: " + message);
-        });
-    }
-    
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
+        Log.d(TAG, "Processing payment: " + data);
         
-        // Always clean up NFC resources
-        if (nfcManager != null) {
-            nfcManager.stopListening();
-            
-            // Clean up plugin resources if using PosNfcDeviceManager
-            if (nfcManager instanceof PosNfcDeviceManager) {
-                ((PosNfcDeviceManager) nfcManager).cleanup();
-            }
-        }
+        // Example: Send confirmation after processing
+        String confirmation = "Payment processed successfully - Receipt #12345";
+        sendPaymentConfirmation(confirmation);
     }
-} 
+}

@@ -1,386 +1,350 @@
-# How to Use Drishti Pay POS SDK
+# POS SDK Core - How to Use
 
-## 📦 Installation
+## 📱 Overview
 
-### Step 1: Add to your app's `build.gradle`
+This SDK provides **minimalistic APIs** for POS (Point of Sale) system integration, focusing on:
+- **NFC device management** for card readers and payment terminals
+- **Sound-based data transmission** for device communication
+- **Simple, production-ready interfaces** with minimal learning curve
+
+## 🚀 Quick Start
+
+### Dependencies
+
+Add to your `build.gradle`:
+
 ```gradle
 dependencies {
     implementation 'com.freedomfinancestack:pos-sdk-core:1.0.0'
 }
 ```
 
-### Step 2: Add to your project's `build.gradle`
-```gradle
-allprojects {
-    repositories {
-        google()
-        mavenCentral()
-        // When you publish to Maven Central, it will be available here
-    }
-}
+### Permissions
+
+Add to your `AndroidManifest.xml`:
+
+```xml
+<uses-permission android:name="android.permission.NFC" />
+<uses-permission android:name="android.permission.RECORD_AUDIO" />
+<uses-feature android:name="android.hardware.nfc" android:required="false" />
 ```
 
-## 🚀 Quick Start (3 Lines of Code!)
+## 💳 NFC Device Management
+
+### Basic NFC Setup
 
 ```java
-// Step 1: Create NFC manager
-INfcDeviceManager nfc = new PaxNfcDeviceManager(context);
+// Initialize NFC manager with your plugin
+IPosNfcPlugin yourPlugin = new YourManufacturerPlugin();
+INfcDeviceManager nfcManager = new PosNfcDeviceManager(yourPlugin);
 
-// Step 2: Start listening
-nfc.startListening(new INfcDeviceManager.NdefCallback() {
+// Start listening for NFC events
+nfcManager.startListening(new NdefCallback() {
     @Override
     public void onNdefMessageDiscovered(NdefMessage message) {
-        // Customer tapped phone - process payment!
+        // Process NFC payment card data
+        processPaymentCard(message);
     }
     
     @Override
     public void onError(String error) {
-        // Handle error
+        Log.e(TAG, "NFC Error: " + error);
     }
 });
 
-// Step 3: Stop when done
-nfc.stopListening();
+// Stop when done
+nfcManager.stopListening();
 ```
 
-## 🏪 Real Example
+### Plugin Implementation
+
+Create your manufacturer-specific plugin:
 
 ```java
-public class MyPosActivity extends Activity {
+public class YourPosPlugin implements IPosNfcPlugin {
+    
+    @Override
+    public void initialize(Context context) throws Exception {
+        // Initialize your manufacturer's SDK here
+    }
+    
+    @Override
+    public void startListening(NdefCallback callback) throws Exception {
+        // Start your device's NFC listening
+    }
+    
+    @Override
+    public void stopListening() {
+        // Stop NFC operations
+    }
+    
+    // Other required methods...
+}
+```
+
+## 🔊 Sound Data Transmission
+
+### Minimalistic Sound API
+
+The SDK provides **ultra-simple sound transmission** - just **listen**, **send**, and **stop**:
+
+```java
+// 1. Create instance
+ISoundDataTransmission sound = new SoundDataTransmissionImpl(context);
+
+// 2. Listen for data
+sound.listen(new ISoundDataTransmission.SoundCallback() {
+    @Override
+    public void onReceived(@NonNull String data) {
+        Log.d(TAG, "Received: " + data);
+        // Process payment data
+    }
+    
+    @Override
+    public void onSent(@NonNull String data) {
+        // Not used when listening
+    }
+    
+    @Override
+    public void onError(@NonNull String error) {
+        Log.e(TAG, "Error: " + error);
+    }
+});
+
+// 3. Send data (with callback)
+sound.send("Payment confirmed", new ISoundDataTransmission.SoundCallback() {
+    @Override
+    public void onReceived(@NonNull String data) {
+        // Not used when sending
+    }
+    
+    @Override
+    public void onSent(@NonNull String data) {
+        Log.d(TAG, "Sent: " + data);
+    }
+    
+    @Override
+    public void onError(@NonNull String error) {
+        Log.e(TAG, "Send failed: " + error);
+    }
+});
+
+// OR send without callback (fire-and-forget)
+sound.send("Quick message");
+
+// 4. Stop when done
+sound.stop();
+```
+
+### Sound Transmission Features
+
+- **🔇 Silent Operation**: Uses inaudible ultrasound frequencies
+- **⚡ Fast Transmission**: Optimized for quick POS transactions
+- **🎯 Simple API**: Just 3 methods - `listen()`, `send()`, `stop()`
+- **🧵 Background Threading**: Non-blocking operations
+- **📱 Native Performance**: Real GGWave C++ library integration
+
+### Sound Data Limits
+
+```java
+// Maximum data length
+int maxLength = 140; // characters
+
+// Validate before sending
+if (data.length() <= maxLength) {
+    sound.send(data);
+} else {
+    Log.e(TAG, "Data too long");
+}
+```
+
+## 📚 Complete Example
+
+```java
+public class PosActivity extends AppCompatActivity {
     
     private INfcDeviceManager nfcManager;
+    private ISoundDataTransmission sound;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
-        // Initialize for PAX machines
-        nfcManager = new PaxNfcDeviceManager(this);
+        // Initialize NFC
+        IPosNfcPlugin plugin = new YourManufacturerPlugin();
+        nfcManager = new PosNfcDeviceManager(plugin);
         
-        // Start payment
-        startPayment(100.00); // $100 payment
+        // Initialize sound transmission
+        sound = new SoundDataTransmissionImpl(this);
+        
+        startPosOperations();
     }
     
-    private void startPayment(double amount) {
-        nfcManager.startListening(new INfcDeviceManager.NdefCallback() {
+    private void startPosOperations() {
+        // Start NFC listening
+        nfcManager.startListening(new NdefCallback() {
             @Override
             public void onNdefMessageDiscovered(NdefMessage message) {
-                // Process payment with your gateway
-                processPayment(message, amount);
+                processPayment(message);
             }
             
             @Override
             public void onError(String error) {
-                showError("Payment failed: " + error);
+                Log.e(TAG, "NFC Error: " + error);
+            }
+        });
+        
+        // Start sound listening
+        sound.listen(new ISoundDataTransmission.SoundCallback() {
+            @Override
+            public void onReceived(@NonNull String data) {
+                handleReceivedData(data);
+            }
+            
+            @Override
+            public void onSent(@NonNull String data) {
+                // Data sent successfully
+            }
+            
+            @Override
+            public void onError(@NonNull String error) {
+                Log.e(TAG, "Sound Error: " + error);
             }
         });
     }
-}
-```
-
-## 📱 Repository Publishing (For You)
-
-To publish to Maven Central:
-
-1. **Setup** your `build.gradle`:
-```gradle
-publishing {
-    publications {
-        maven(MavenPublication) {
-            groupId = 'com.freedomfinancestack'
-            artifactId = 'pos-sdk-core'
-            version = '1.0.0'
-            
-            from components.java
+    
+    private void processPayment(NdefMessage message) {
+        // Process NFC payment card
+        // ...
+        
+        // Send confirmation via sound
+        sound.send("Payment processed - Receipt #12345");
+    }
+    
+    private void handleReceivedData(String data) {
+        // Handle received sound data
+        Log.d(TAG, "Sound data: " + data);
+    }
+    
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        
+        // Cleanup resources
+        if (nfcManager != null) {
+            nfcManager.stopListening();
+        }
+        
+        if (sound != null) {
+            sound.stop();
         }
     }
 }
 ```
 
-2. **Publish**:
-```bash
-./gradlew publishToMavenCentral
-```
+## 🛠️ Advanced Configuration
 
-3. **Others can then use**:
+### Build Configuration
+
+The SDK includes native library support. Ensure your `build.gradle` has:
+
 ```gradle
-implementation 'com.freedomfinancestack:pos-sdk-core:1.0.0'
-```
-
-## 🔊 GGWave Sound-Based Data Transmission
-
-The SDK now includes GGWave functionality for sound-based data transmission between devices.
-
-### Quick Start with Sound Data Transmission
-
-```java
-// Step 1: Create sound data transmission instance
-ISoundDataTransmission soundTransmission = new SoundDataTransmissionImpl(context);
-
-// Step 2: Send data via sound
-soundTransmission.sendData("Hello World!", new ISoundDataTransmission.SoundTransmissionCallback() {
-    @Override
-    public void onDataSent(@NonNull String data) {
-        Log.d(TAG, "Data sent successfully: " + data);
-    }
+android {
+    compileSdk 34
     
-    @Override
-    public void onError(@NonNull String errorMessage, @Nullable Exception exception) {
-        Log.e(TAG, "Send failed: " + errorMessage);
-    }
-    
-    // Other callback methods...
-});
-
-// Step 3: Listen for incoming data
-soundTransmission.startListening(new ISoundDataTransmission.SoundTransmissionCallback() {
-    @Override
-    public void onDataReceived(@NonNull String data) {
-        Log.d(TAG, "Received: " + data);
-        // Process received data
-    }
-    
-    @Override
-    public void onError(@NonNull String errorMessage, @Nullable Exception exception) {
-        Log.e(TAG, "Receive failed: " + errorMessage);
-    }
-    
-    // Other callback methods...
-});
-
-// Step 4: Cleanup when done
-soundTransmission.cleanup();
-```
-
-### High-Level Workflow API
-
-For more complex scenarios like device pairing and data transfer workflows:
-
-```java
-// Create device workflow manager
-ISoundBasedDeviceWorkflow deviceWorkflow = new SoundBasedDeviceWorkflowImpl(context);
-
-// Initiate pairing with another device
-deviceWorkflow.initiatePairing("POS_TERMINAL_001", new ISoundBasedDeviceWorkflow.DevicePairingCallback() {
-    @Override
-    public void onPairingSuccess(@NonNull String deviceId) {
-        Log.d(TAG, "Paired with: " + deviceId);
+    defaultConfig {
+        minSdk 23
+        targetSdk 34
         
-        // Transfer payment data to paired device
-        String paymentData = "{\"amount\":\"25.99\",\"currency\":\"USD\"}";
-        deviceWorkflow.transferData(paymentData, new ISoundBasedDeviceWorkflow.DataTransferCallback() {
-            @Override
-            public void onTransferSuccess(@NonNull String data) {
-                Log.d(TAG, "Payment data sent successfully");
-            }
-            
-            @Override
-            public void onTransferFailed(@NonNull String errorMessage) {
-                Log.e(TAG, "Transfer failed: " + errorMessage);
-            }
-            
-            // Other callback methods...
-        });
+        ndk {
+            abiFilters 'arm64-v8a', 'armeabi-v7a', 'x86', 'x86_64'
+        }
     }
     
-    @Override
-    public void onPairingFailed(@NonNull String errorMessage) {
-        Log.e(TAG, "Pairing failed: " + errorMessage);
-    }
-    
-    // Other callback methods...
-});
-```
-
-### POS Payment Scenarios
-
-#### Scenario 1: Send Payment Request to Customer
-
-```java
-public class PaymentActivity extends Activity {
-    private ISoundDataTransmission soundTransmission;
-    
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        
-        soundTransmission = new SoundDataTransmissionImpl(this);
-        
-        // Send payment request to customer's device
-        sendPaymentRequest("25.99", "USD", "Coffee Shop");
-    }
-    
-    private void sendPaymentRequest(String amount, String currency, String merchant) {
-        String paymentRequest = String.format(
-            "{\"type\":\"payment_request\",\"amount\":\"%s\",\"currency\":\"%s\",\"merchant\":\"%s\"}",
-            amount, currency, merchant
-        );
-        
-        soundTransmission.sendData(paymentRequest, new ISoundDataTransmission.SoundTransmissionCallback() {
-            @Override
-            public void onDataSent(@NonNull String data) {
-                showMessage("Payment request sent to customer");
-                // Start listening for payment confirmation
-                listenForPaymentConfirmation();
-            }
-            
-            @Override
-            public void onError(@NonNull String errorMessage, @Nullable Exception exception) {
-                showMessage("Failed to send payment request: " + errorMessage);
-            }
-            
-            @Override
-            public void onTransmissionStarted() {
-                showMessage("Sending payment request via sound...");
-            }
-            
-            @Override
-            public void onTransmissionCompleted() {
-                Log.d(TAG, "Payment request transmission completed");
-            }
-            
-            // Other methods...
-        });
-    }
-    
-    private void listenForPaymentConfirmation() {
-        soundTransmission.startListening(new ISoundDataTransmission.SoundTransmissionCallback() {
-            @Override
-            public void onDataReceived(@NonNull String data) {
-                if (data.contains("payment_confirmation")) {
-                    showMessage("Payment confirmed! Transaction completed.");
-                    soundTransmission.stopListening();
-                }
-            }
-            
-            @Override
-            public void onError(@NonNull String errorMessage, @Nullable Exception exception) {
-                showMessage("Error receiving confirmation: " + errorMessage);
-            }
-            
-            // Other methods...
-        });
+    buildFeatures {
+        prefab true
     }
 }
 ```
 
-#### Scenario 2: Device-to-Device Data Sync
+### ProGuard Configuration
+
+The SDK includes ProGuard rules automatically. No additional configuration needed.
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+1. **NFC not working**: Ensure device has NFC capability and permissions are granted
+2. **Sound transmission fails**: Check RECORD_AUDIO permission and device microphone/speaker
+3. **Native library errors**: Verify NDK configuration and supported architectures
+
+### Debugging
+
+Enable verbose logging:
 
 ```java
-// Sync transaction data between POS terminals
-ISoundBasedDeviceWorkflow deviceWorkflow = new SoundBasedDeviceWorkflowImpl(context);
-
-// Terminal A: Wait for pairing
-deviceWorkflow.waitForPairing(30000, new ISoundBasedDeviceWorkflow.DevicePairingCallback() {
-    @Override
-    public void onPairingSuccess(@NonNull String deviceId) {
-        // Send daily sales data
-        String salesData = getDailySalesData();
-        deviceWorkflow.transferData(salesData);
-    }
-    
-    // Other callback methods...
-});
-
-// Terminal B: Initiate pairing
-deviceWorkflow.initiatePairing("TERMINAL_B", new ISoundBasedDeviceWorkflow.DevicePairingCallback() {
-    @Override
-    public void onPairingSuccess(@NonNull String deviceId) {
-        // Request sales data from paired terminal
-        deviceWorkflow.requestData("daily_sales", new ISoundBasedDeviceWorkflow.DataTransferCallback() {
-            @Override
-            public void onDataReceived(@NonNull String data) {
-                processSalesData(data);
-            }
-            
-            // Other callback methods...
-        });
-    }
-    
-    // Other callback methods...
-});
+// The SDK automatically logs important events
+// Check logcat with tag filters:
+// - "SoundDataTransmission"
+// - "PosNfcDeviceManager"
 ```
 
-### Required Permissions
+### Error Handling
 
-Add to your `AndroidManifest.xml`:
-
-```xml
-<!-- Required for GGWave audio recording -->
-<uses-permission android:name="android.permission.RECORD_AUDIO" />
-
-<!-- Optional: for better audio quality -->
-<uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
-```
-
-### GGWave Configuration
+All SDK operations use callbacks for error reporting:
 
 ```java
-ISoundDataTransmission soundTransmission = new SoundDataTransmissionImpl(context);
-
-// Set transmission volume (0.0 to 1.0)
-soundTransmission.setTransmissionVolume(0.8f);
-
-// Check if properly initialized
-if (soundTransmission.isInitialized()) {
-    // Ready to use
-}
-
-// Check if currently listening
-if (soundTransmission.isListening()) {
-    // Currently receiving data
+// Always implement error callbacks
+@Override
+public void onError(@NonNull String error) {
+    Log.e(TAG, "SDK Error: " + error);
+    // Handle error appropriately
+    // - Show user message
+    // - Retry operation
+    // - Fall back to alternative method
 }
 ```
 
-### Best Practices
+## 📝 Best Practices
 
-1. **Always cleanup resources:**
-   ```java
-   @Override
-   protected void onDestroy() {
-       super.onDestroy();
-       if (soundTransmission != null) {
-           soundTransmission.cleanup();
-       }
-   }
-   ```
+1. **Always cleanup resources** in `onDestroy()`
+2. **Handle errors gracefully** with appropriate user feedback
+3. **Test on real devices** - emulators may not support all features
+4. **Check permissions** before starting operations
+5. **Use fire-and-forget sending** for non-critical data
+6. **Implement timeouts** for critical operations
 
-2. **Handle permissions properly:**
-   ```java
-   if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) 
-       != PackageManager.PERMISSION_GRANTED) {
-       ActivityCompat.requestPermissions(this, 
-           new String[]{Manifest.permission.RECORD_AUDIO}, 
-           REQUEST_AUDIO_PERMISSION);
-   }
-   ```
+## 🏗️ Architecture
 
-3. **Use appropriate volume levels:**
-   ```java
-   // For quiet environments
-   soundTransmission.setTransmissionVolume(0.3f);
-   
-   // For noisy environments  
-   soundTransmission.setTransmissionVolume(0.8f);
-   ```
+The SDK follows clean, minimalistic architecture:
 
-4. **Handle threading properly:**
-   ```java
-   // All sound transmission callbacks run on background threads
-   // Update UI on main thread
-   @Override
-   public void onDataReceived(@NonNull String data) {
-       runOnUiThread(() -> {
-           updateUI(data);
-       });
-   }
-   ```
+```
+┌─────────────────┐    ┌─────────────────┐
+│   Your App      │    │   POS SDK Core  │
+├─────────────────┤    ├─────────────────┤
+│ Activity/       │───▶│ INfcDeviceManager│
+│ Fragment        │    │ ISoundDataTrans │
+│                 │    │ (3 methods only)│
+└─────────────────┘    └─────────────────┘
+                              │
+                       ┌─────────────────┐
+                       │ Native Libraries│
+                       ├─────────────────┤
+                       │ Your NFC Plugin │
+                       │ GGWave Library  │
+                       └─────────────────┘
+```
 
-## ✅ That's It!
+**Key Principles:**
+- ✅ **Minimal API Surface** - Only essential methods exposed
+- ✅ **Plugin Architecture** - Manufacturer SDKs via plugins
+- ✅ **Native Performance** - JNI integration for sound transmission
+- ✅ **Clean Separation** - Core SDK independent of specific hardware
 
-Your SDK now includes:
-- ✅ NFC functionality for contactless payments
-- ✅ Sound-based data transmission (GGWave technology)
-- ✅ High-level device workflow APIs
-- ✅ Comprehensive examples and documentation
-- ✅ Easy integration and deployment 
+## 📞 Support
+
+For issues and questions:
+- Check the troubleshooting section above
+- Review the example code in the repository
+- Ensure all permissions and dependencies are correctly configured

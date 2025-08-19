@@ -19,3 +19,27 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Keep native methods for GGWave JNI
+-keepclasseswithmembernames class * {
+    native <methods>;
+}
+
+# Keep the SoundDataTransmissionImpl class and its native methods
+-keep class com.freedomfinancestack.pos_sdk_core.implementations.SoundDataTransmissionImpl {
+    native <methods>;
+}
+
+# Keep GGWave protocol enums
+-keep class com.freedomfinancestack.pos_sdk_core.enums.GGWaveProtocol {
+    *;
+}
+
+# Keep sound transmission interfaces and callbacks
+-keep interface com.freedomfinancestack.pos_sdk_core.interfaces.ISoundDataTransmission {
+    *;
+}
+
+-keep interface com.freedomfinancestack.pos_sdk_core.interfaces.ISoundDataTransmission$SoundCallback {
+    *;
+}

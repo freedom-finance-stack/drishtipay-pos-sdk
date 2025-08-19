@@ -1,0 +1,3 @@
+[submodule "pos-sdk-core/src/main/cpp/ggwave"]
+	path = pos-sdk-core/src/main/cpp/ggwave
+	url = https://github.com/ggerganov/ggwave.git

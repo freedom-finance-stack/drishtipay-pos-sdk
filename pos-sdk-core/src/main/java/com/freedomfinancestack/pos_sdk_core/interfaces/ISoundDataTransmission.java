@@ -4,129 +4,77 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 /**
- * Interface for sound-based data transmission functionality using GGWave technology.
+ * Simplified interface for sound-based data transmission using GGWave technology.
  * 
- * This interface provides methods for transmitting and receiving data through sound waves,
- * enabling communication between devices without requiring network connectivity or physical contact.
+ * Core functionality for transmitting and receiving data through inaudible sound waves.
+ * Uses optimized ultrasound protocol by default for fast, silent data exchange.
  * 
  * USAGE:
- * 1. Initialize with proper audio permissions (RECORD_AUDIO)
- * 2. Start listening for incoming data transmissions
- * 3. Send data when needed via sound waves
- * 4. Handle callbacks on appropriate threads
+ * 1. Ensure RECORD_AUDIO permission is granted
+ * 2. Call listen() to start receiving data
+ * 3. Call send() to transmit data  
+ * 4. Call stop() when done
  * 
- * THREADING: All callbacks are invoked on background threads.
- * UI updates must be dispatched to main thread by the caller.
+ * THREADING: All callbacks execute on background threads.
  */
 public interface ISoundDataTransmission {
 
     /**
-     * Starts listening for incoming sound transmissions.
-     * This is a non-blocking operation that will invoke callbacks when data is received.
+     * Start listening for incoming data transmissions.
+     * Non-blocking operation with callback-based results.
      * 
-     * @param callback The callback to handle received data and errors.
-     *                Must not be null.
+     * @param callback Handles received data and errors
      * @throws IllegalArgumentException if callback is null
-     * @throws IllegalStateException if audio permissions are not granted
+     * @throws IllegalStateException if audio permissions missing
      */
-    void startListening(@NonNull SoundTransmissionCallback callback);
+    void listen(@NonNull SoundCallback callback);
 
     /**
-     * Stops listening for sound transmissions.
-     * This operation is idempotent and safe to call multiple times.
-     */
-    void stopListening();
-
-    /**
-     * Sends data via sound transmission.
-     * This is a non-blocking operation.
+     * Send data via sound transmission.
+     * Non-blocking operation with optional status callback.
      * 
-     * @param data The data to transmit. Must not be null or empty.
-     * @param callback Optional callback to handle transmission status.
-     * @throws IllegalArgumentException if data is null or empty
-     * @throws IllegalStateException if not properly initialized
+     * @param data Data to transmit (max 140 characters)
+     * @param callback Optional transmission status callback
+     * @throws IllegalArgumentException if data is null/empty/too long
      */
-    void sendData(@NonNull String data, @Nullable SoundTransmissionCallback callback);
+    void send(@NonNull String data, @Nullable SoundCallback callback);
 
     /**
-     * Sends data via sound transmission without status callback.
+     * Send data via sound transmission.
+     * Fire-and-forget operation without status callback.
      * 
-     * @param data The data to transmit. Must not be null or empty.
-     * @throws IllegalArgumentException if data is null or empty
-     * @throws IllegalStateException if not properly initialized
+     * @param data Data to transmit (max 140 characters)
+     * @throws IllegalArgumentException if data is null/empty/too long
      */
-    void sendData(@NonNull String data);
+    void send(@NonNull String data);
 
     /**
-     * Checks if currently listening for sound transmissions.
-     * 
-     * @return true if listening, false otherwise
+     * Stop all sound operations and release resources.
+     * Safe to call multiple times.
      */
-    boolean isListening();
+    void stop();
 
     /**
-     * Checks if sound transmission is properly initialized and ready for use.
-     * 
-     * @return true if initialized, false otherwise
+     * Simplified callback for sound operations.
+     * All methods execute on background threads.
      */
-    boolean isInitialized();
-
-    /**
-     * Gets the current volume level used for transmission.
-     * 
-     * @return volume level between 0.0 and 1.0
-     */
-    float getTransmissionVolume();
-
-    /**
-     * Sets the volume level for sound transmissions.
-     * 
-     * @param volume Volume level between 0.0 and 1.0
-     * @throws IllegalArgumentException if volume is outside valid range
-     */
-    void setTransmissionVolume(float volume);
-
-    /**
-     * Cleans up resources and stops all operations.
-     * Should be called when sound transmission is no longer needed.
-     */
-    void cleanup();
-
-    /**
-     * Callback interface for sound transmission operations.
-     * All methods are called on background threads.
-     */
-    interface SoundTransmissionCallback {
+    interface SoundCallback {
         /**
-         * Called when data is successfully received via sound transmission.
-         * 
-         * @param data The received data. Never null.
+         * Data successfully received.
+         * @param data Received data
          */
-        void onDataReceived(@NonNull String data);
+        void onReceived(@NonNull String data);
 
         /**
-         * Called when data is successfully sent via sound transmission.
-         * 
-         * @param data The data that was sent. Never null.
+         * Data successfully sent.
+         * @param data Sent data
          */
-        void onDataSent(@NonNull String data);
+        void onSent(@NonNull String data);
 
         /**
-         * Called when an error occurs during sound transmission operations.
-         * 
-         * @param errorMessage Description of the error. Never null.
-         * @param exception Optional exception that caused the error.
+         * Operation failed.
+         * @param error Error description
          */
-        void onError(@NonNull String errorMessage, @Nullable Exception exception);
-
-        /**
-         * Called when transmission starts.
-         */
-        void onTransmissionStarted();
-
-        /**
-         * Called when transmission completes (success or failure).
-         */
-        void onTransmissionCompleted();
+        void onError(@NonNull String error);
     }
 }
