@@ -48,144 +48,125 @@ Java_com_freedomfinancestack_pos_1sdk_1core_implementations_SoundDataTransmissio
 }
 
 /**
- * Start listening for incoming transmissions
- */
-JNIEXPORT void JNICALL
-Java_com_freedomfinancestack_pos_1sdk_1core_implementations_SoundDataTransmissionImpl_startListeningNative(
-        JNIEnv *env, jobject thiz, jlong instancePtr) {
-    
-    if (instancePtr < 0) {
-        LOGE("Invalid GGWave instance pointer: %ld", instancePtr);
-        return;
-    }
-    
-    LOGI("Starting to listen for transmissions");
-    // Note: In C API, listening is handled by continuously calling decode on captured audio
-}
-
-/**
- * Stop listening for transmissions
- */
-JNIEXPORT void JNICALL
-Java_com_freedomfinancestack_pos_1sdk_1core_implementations_SoundDataTransmissionImpl_stopListeningNative(
-        JNIEnv *env, jobject thiz, jlong instancePtr) {
-    
-    if (instancePtr < 0) {
-        LOGE("Invalid GGWave instance pointer: %ld", instancePtr);
-        return;
-    }
-    
-    LOGI("Stopping transmission listening");
-    // Note: In C API, stopping is handled by stopping the audio capture in Java
-}
-
-/**
- * Decode captured audio data using C API
- * Note: This is a simplified version - in a full implementation, you would
- * need to integrate with Android's AudioRecord API to capture real audio data
+ * Process captured audio data and decode any messages
  */
 JNIEXPORT jstring JNICALL
-Java_com_freedomfinancestack_pos_1sdk_1core_implementations_SoundDataTransmissionImpl_captureAndDecodeNative(
-        JNIEnv *env, jobject thiz, jlong instancePtr) {
+Java_com_freedomfinancestack_pos_1sdk_1core_implementations_SoundDataTransmissionImpl_processCaptureDataNative(
+        JNIEnv *env, jobject thiz, jlong instancePtr, jshortArray audioData) {
     
-    if (instancePtr < 0) {
-        LOGE("Invalid GGWave instance pointer: %ld", instancePtr);
-        return nullptr;
-    }
-    
-    // Note: In a real implementation, this would capture audio from microphone
-    // and call ggwave_decode with the captured data. For now, we return null
-    // to indicate no data received.
-    
-    return nullptr;
-}
-
-/**
- * Encode data to audio using C API (like official ggwave-java)
- */
-JNIEXPORT jbyteArray JNICALL
-Java_com_freedomfinancestack_pos_1sdk_1core_implementations_SoundDataTransmissionImpl_encodeToAudioWithProtocolNative(
-        JNIEnv *env, jobject thiz, jlong instancePtr, jstring data, jint protocolId) {
-    
-    if (instancePtr < 0) {
+    if (instancePtr == 0) {
         LOGE("Invalid GGWave instance pointer: %ld", instancePtr);
         return nullptr;
     }
     
     ggwave_Instance instance = static_cast<ggwave_Instance>(instancePtr);
     
-    const char* dataToEncode = env->GetStringUTFChars(data, nullptr);
-    int dataLength = env->GetStringLength(data);
+    jsize dataSize = env->GetArrayLength(audioData);
+    jboolean isCopy = false;
+    jshort* cData = env->GetShortArrayElements(audioData, &isCopy);
     
-    if (dataToEncode == nullptr) {
-        LOGE("Failed to get string data");
+    if (cData == nullptr) {
+        LOGE("Failed to get audio data array");
         return nullptr;
     }
     
     try {
-        LOGI("Encoding data with protocol %d: %s", protocolId, dataToEncode);
+        char output[256];
+        int ret = ggwave_decode(instance, (char*)cData, 2 * dataSize, output);
         
-        // Two-step encoding like official ggwave-java
-        // Step 1: Get the required buffer size
-        const int bufferSize = ggwave_encode(instance, dataToEncode, dataLength, static_cast<ggwave_ProtocolId>(protocolId), 10, nullptr, 1);
+        env->ReleaseShortArrayElements(audioData, cData, JNI_ABORT);
         
-        if (bufferSize <= 0) {
-            LOGE("Failed to get buffer size for encoding with protocol %d", protocolId);
-            env->ReleaseStringUTFChars(data, dataToEncode);
-            return nullptr;
+        if (ret > 0) {
+            LOGI("Decoded message: '%s'", output);
+            return env->NewStringUTF(output);
         }
         
-        // Step 2: Get the actual waveform data
-        char* waveform = new char[bufferSize];
-        const int actualSize = ggwave_encode(instance, dataToEncode, dataLength, static_cast<ggwave_ProtocolId>(protocolId), 10, waveform, 0);
-        
-        if (actualSize != bufferSize) {
-            LOGE("Encoding size mismatch: expected %d bytes, got %d bytes", bufferSize, actualSize);
-            delete[] waveform;
-            env->ReleaseStringUTFChars(data, dataToEncode);
-            return nullptr;
-        }
-        
-        // Convert to byte array (I16 samples)
-        jbyteArray result = env->NewByteArray(bufferSize);
-        if (result == nullptr) {
-            LOGE("Failed to allocate byte array");
-            delete[] waveform;
-            env->ReleaseStringUTFChars(data, dataToEncode);
-            return nullptr;
-        }
-        
-        env->SetByteArrayRegion(result, 0, bufferSize, reinterpret_cast<const jbyte*>(waveform));
-        
-        LOGI("Successfully encoded data to %d bytes (%d samples) with protocol %d", bufferSize, actualSize, protocolId);
-        
-        delete[] waveform;
-        env->ReleaseStringUTFChars(data, dataToEncode);
-        return result;
+        return nullptr;
         
     } catch (const std::exception& e) {
-        LOGE("Exception during encoding: %s", e.what());
-        env->ReleaseStringUTFChars(data, dataToEncode);
+        LOGE("Exception during audio processing: %s", e.what());
+        env->ReleaseShortArrayElements(audioData, cData, JNI_ABORT);
         return nullptr;
     }
 }
 
 /**
- * Get the transmission waveform data
+ * Encode message to audio samples (like official ggwave-java)
  */
-JNIEXPORT jbyteArray JNICALL
-Java_com_freedomfinancestack_pos_1sdk_1core_implementations_SoundDataTransmissionImpl_getTxWaveformNative(
-        JNIEnv *env, jobject thiz, jlong instancePtr) {
+JNIEXPORT jshortArray JNICALL
+Java_com_freedomfinancestack_pos_1sdk_1core_implementations_SoundDataTransmissionImpl_sendMessageNative(
+        JNIEnv *env, jobject thiz, jlong instancePtr, jstring message) {
     
-    if (instancePtr < 0) {
+    if (instancePtr == 0) {
         LOGE("Invalid GGWave instance pointer: %ld", instancePtr);
         return nullptr;
     }
     
-    // Note: In C API, waveform data is returned directly from encode function
-    LOGI("getTxWaveform called - data returned from encode function");
-    return nullptr;
+    ggwave_Instance instance = static_cast<ggwave_Instance>(instancePtr);
+    
+    const char* messageToEncode = env->GetStringUTFChars(message, nullptr);
+    int messageLength = env->GetStringLength(message);
+    
+    if (messageToEncode == nullptr) {
+        LOGE("Failed to get message string");
+        return nullptr;
+    }
+    
+    try {
+        LOGI("Encoding message: %s", messageToEncode);
+        
+        // Use AUDIBLE_FAST protocol like the working example
+        const int protocolId = GGWAVE_PROTOCOL_AUDIBLE_FAST;
+        
+        // Two-step encoding like official ggwave-java
+        // Step 1: Get the required buffer size
+        const int bufferSize = ggwave_encode(instance, messageToEncode, messageLength, 
+                                           static_cast<ggwave_ProtocolId>(protocolId), 10, nullptr, 1);
+        
+        if (bufferSize <= 0) {
+            LOGE("Failed to get buffer size for encoding");
+            env->ReleaseStringUTFChars(message, messageToEncode);
+            return nullptr;
+        }
+        
+        // Step 2: Get the actual waveform data
+        char* waveform = new char[bufferSize];
+        const int actualSamples = ggwave_encode(instance, messageToEncode, messageLength, 
+                                              static_cast<ggwave_ProtocolId>(protocolId), 10, waveform, 0);
+        
+        if (2 * actualSamples != bufferSize) {
+            LOGE("Encoding size mismatch: expected %d samples (%d bytes), got %d samples", 
+                 bufferSize/2, bufferSize, actualSamples);
+            delete[] waveform;
+            env->ReleaseStringUTFChars(message, messageToEncode);
+            return nullptr;
+        }
+        
+        // Convert to short array (I16 samples)
+        jshortArray result = env->NewShortArray(actualSamples);
+        if (result == nullptr) {
+            LOGE("Failed to allocate short array");
+            delete[] waveform;
+            env->ReleaseStringUTFChars(message, messageToEncode);
+            return nullptr;
+        }
+        
+        env->SetShortArrayRegion(result, 0, actualSamples, reinterpret_cast<const jshort*>(waveform));
+        
+        LOGI("Successfully encoded message to %d audio samples", actualSamples);
+        
+        delete[] waveform;
+        env->ReleaseStringUTFChars(message, messageToEncode);
+        return result;
+        
+    } catch (const std::exception& e) {
+        LOGE("Exception during message encoding: %s", e.what());
+        env->ReleaseStringUTFChars(message, messageToEncode);
+        return nullptr;
+    }
 }
+
+
 
 /**
  * Cleanup GGWave instance
