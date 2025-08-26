@@ -26,6 +26,7 @@ import com.freedomfinancestack.pos_sdk_core.models.Card
 import com.freedomfinancestack.pos_sdk_core.implementations.NarratorImpl
 import com.freedomfinancestack.pos_sdk_core.implementations.GGWaveImpl
 import com.freedomfinancestack.pos_sdk_core.interfaces.IGGWave
+import com.freedomfinancestack.pos_sdk_core.models.GGWaveMessage
 import com.freedomfinancestack.razorpay_drishtipay_test.payment.InitiatePayment
 import com.freedomfinancestack.razorpay_drishtipay_test.pos.PaxNeptuneLitePlugin
 import com.freedomfinancestack.razorpay_drishtipay_test.savedcards.ListSavedCards
@@ -51,6 +52,11 @@ class MainActivity : ComponentActivity() {
     private var ggWaveLastMessage = mutableStateOf("")
     private var ggWaveReceivedMessages = mutableStateOf(listOf<String>())
     private var ggWaveLogMessages = mutableStateOf(listOf<String>())
+
+    // Cards state for GGWave triggered updates
+    private var varunCardsState = mutableStateOf(listOf<Card>())
+    private var varunShowCardsState = mutableStateOf(false)
+    private var varunForceRefresh = mutableStateOf(0)
 
     // These will be managed inside Composable
     @Volatile
@@ -148,6 +154,52 @@ class MainActivity : ComponentActivity() {
                         Log.d("VarunDebug", "Card clicked: ${card.last4Digits}")
                         initiatePaymentForCard(card) { response ->
                             Log.d("VarunDebug", "Payment response received")
+                            paymentResponseState = response
+                        }
+                    }
+                }
+
+                // GGWave Triggered Cards Section (only show when triggered by GGWave)
+                if (varunShowCardsState.value) {
+                    Log.d(
+                        "VarunDebug",
+                        "SHOWING GGWave Triggered Cards with ${varunCardsState.value.size} cards!"
+                    )
+                    
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.tertiaryContainer
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp)
+                        ) {
+                            Text(
+                                text = "🎵 GGWave Triggered Cards",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer
+                            )
+                            
+                            Spacer(modifier = Modifier.height(8.dp))
+                            
+                            Text(
+                                text = "Cards loaded automatically after receiving ultrasound message",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer
+                            )
+                            
+                            Spacer(modifier = Modifier.height(12.dp))
+                        }
+                    }
+                    
+                    SavedCardsSection(varunCardsState.value) { card ->
+                        Log.d("VarunDebug", "GGWave triggered card clicked: ${card.last4Digits}")
+                        initiatePaymentForCard(card) { response ->
+                            Log.d("VarunDebug", "GGWave payment response received")
                             paymentResponseState = response
                         }
                     }
@@ -361,7 +413,7 @@ class MainActivity : ComponentActivity() {
                 Button(
                     onClick = {
                         Log.d("VarunDebug", "Start button CLICKED!")
-                        narrator.speak("Hello my name is Varun Bansal")
+                        narrator.speak("NFC Simulation / Mobile Tapped")
                         startVarunTest(onCardsLoaded)
                     },
                     modifier = Modifier.fillMaxWidth(),
@@ -483,7 +535,7 @@ class MainActivity : ComponentActivity() {
                         containerColor = MaterialTheme.colorScheme.tertiary
                     )
                 ) {
-                    Text("Send Test Message", fontSize = 14.sp)
+                                            Text("Send Ultrasound Message", fontSize = 14.sp)
                 }
 
                 // Received Messages Display
@@ -1276,20 +1328,55 @@ class MainActivity : ComponentActivity() {
             // Start listening
             try {
                 val success = ggWave.startListening(object : IGGWave.GGWaveCallback {
-                    override fun onMessageReceived(message: String): Boolean {
+                    override fun onMessageReceived(message: GGWaveMessage): Boolean {
                         runOnUiThread {
-                            // Add timestamp to received message
+                            // Add timestamp to received structured message
                             val timestamp = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault())
                                 .format(java.util.Date())
-                            val timestampedMessage = "[$timestamp] $message"
+                            val displayMessage = "📱 Mobile: ${message.mobileNumber} | App: ${message.appType}"
+                            val timestampedMessage = "[$timestamp] $displayMessage"
                             
                             // Update last message and add to received messages list
-                            ggWaveLastMessage.value = message
+                            ggWaveLastMessage.value = displayMessage
                             ggWaveReceivedMessages.value = ggWaveReceivedMessages.value + timestampedMessage
                             
-                            addGGWaveLog("📨 Received: $message")
-                            narrator.speak("Message received: $message")
-                            Toast.makeText(this@MainActivity, "New message received!", Toast.LENGTH_SHORT).show()
+                            addGGWaveLog("📨 DrishtiPay Message - Mobile: [REDACTED] | App: ${message.appType}")
+                            narrator.speak("DrishtiPay message received from mobile number")
+                            Toast.makeText(this@MainActivity, "DrishtiPay message received!", Toast.LENGTH_SHORT).show()
+                            
+                            // Call requested function after receiving message
+                            Log.d("VarunDebug", "Start button CLICKED!")
+                            narrator.speak("NFC Simulation / Mobile Tapped")
+                            
+                            // Trigger the Varun test functionality
+                            startVarunTest { newCards, showCards ->
+                                Log.d("VarunDebug", "GGWave triggered cards callback: ${newCards.size} cards, show = $showCards")
+                                
+                                // Update class-level state variables that can be accessed by Composables
+                                varunCardsState.value = newCards
+                                varunShowCardsState.value = showCards
+                                varunForceRefresh.value = varunForceRefresh.value + 1
+                                
+                                Log.d("VarunDebug", "Cards state updated: ${varunCardsState.value.size} cards, show = ${varunShowCardsState.value}")
+                            }
+                        }
+                        return true // Continue listening
+                    }
+                    
+                    override fun onRawMessageReceived(rawMessage: String): Boolean {
+                        runOnUiThread {
+                            // Add timestamp to received raw message
+                            val timestamp = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault())
+                                .format(java.util.Date())
+                            val timestampedMessage = "[$timestamp] Raw: $rawMessage"
+                            
+                            // Update last message and add to received messages list
+                            ggWaveLastMessage.value = "Raw: $rawMessage"
+                            ggWaveReceivedMessages.value = ggWaveReceivedMessages.value + timestampedMessage
+                            
+                            addGGWaveLog("📨 Raw message: $rawMessage")
+                            narrator.speak("Raw message received")
+                            Toast.makeText(this@MainActivity, "Raw message received!", Toast.LENGTH_SHORT).show()
                         }
                         return true // Continue listening
                     }
@@ -1314,30 +1401,36 @@ class MainActivity : ComponentActivity() {
     
     private fun sendGGWaveTestMessage() {
         try {
-            val testMessage = "DrishtiPay-Test-${System.currentTimeMillis()}"
-            addGGWaveLog("📤 Sending: $testMessage")
+            // Create structured DrishtiPay message with test mobile number
+            val testMobileNumber = "9348192478192" // From user's example
+            addGGWaveLog("📤 Sending DrishtiPay message via ULTRASOUND with mobile: [REDACTED]")
             
-            val success = ggWave.send(testMessage, false, true, object : IGGWave.GGWaveTransmissionCallback {
+            // Create structured message and send with ultrasound mode
+            val customMessage = GGWaveMessage(testMobileNumber, "drishtipay_app", "ggwave")
+            val success = ggWave.sendMessage(customMessage, true, true, object : IGGWave.GGWaveTransmissionCallback {
                 override fun onTransmissionComplete() {
                     runOnUiThread {
-                        addGGWaveLog("✅ Message sent successfully!")
-                        narrator.speak("Message sent")
-                        Toast.makeText(this@MainActivity, "Message sent!", Toast.LENGTH_SHORT).show()
+                        addGGWaveLog("✅ DrishtiPay ULTRASOUND message sent successfully!")
+                        narrator.speak("DrishtiPay ultrasound message sent")
+                        Toast.makeText(this@MainActivity, "DrishtiPay ultrasound message sent!", Toast.LENGTH_SHORT).show()
                     }
                 }
                 
                 override fun onTransmissionError(error: String) {
                     runOnUiThread {
-                        addGGWaveLog("❌ Send error: $error")
+                        addGGWaveLog("❌ Ultrasound send error: $error")
+                        Toast.makeText(this@MainActivity, "Send failed: $error", Toast.LENGTH_LONG).show()
                     }
                 }
             })
             
-            if (!success) {
-                addGGWaveLog("❌ Failed to start transmission")
+            if (success) {
+                addGGWaveLog("✅ DrishtiPay ULTRASOUND transmission started")
+            } else {
+                addGGWaveLog("❌ Failed to start DrishtiPay ultrasound transmission")
             }
         } catch (e: Exception) {
-            addGGWaveLog("❌ Error sending message: ${e.message}")
+            addGGWaveLog("❌ Error sending DrishtiPay message: ${e.message}")
         }
     }
     

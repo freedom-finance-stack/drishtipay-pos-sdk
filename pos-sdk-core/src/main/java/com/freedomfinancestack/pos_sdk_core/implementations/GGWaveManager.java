@@ -20,6 +20,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.freedomfinancestack.pos_sdk_core.interfaces.IGGWave;
+import com.freedomfinancestack.pos_sdk_core.models.GGWaveMessage;
 
 import org.json.JSONObject;
 
@@ -164,15 +165,33 @@ public class GGWaveManager implements IGGWave {
         webView.postWebMessage(new WebMessage("port", new WebMessagePort[]{messageChannel[1]}), Uri.EMPTY);
     }
     
-    private void handleReceivedMessage(@NonNull String message) {
+    private void handleReceivedMessage(@NonNull String rawMessage) {
         Log.d(TAG, "Received message: [REDACTED]"); // Don't log actual message for privacy
         
         if (currentCallback != null) {
             try {
-                boolean shouldContinue = currentCallback.onMessageReceived(message);
+                // Try to parse as structured DrishtiPay message first
+                try {
+                    GGWaveMessage ggWaveMessage = GGWaveMessage.fromJson(rawMessage);
+                    if (ggWaveMessage.isValidDrishtiPayMessage()) {
+                        Log.d(TAG, "Valid DrishtiPay message received");
+                        boolean shouldContinue = currentCallback.onMessageReceived(ggWaveMessage);
+                        if (!shouldContinue) {
+                            stopListening();
+                        }
+                        return;
+                    }
+                } catch (IllegalArgumentException e) {
+                    // Not a valid JSON or DrishtiPay format, treat as raw message
+                    Log.d(TAG, "Received non-DrishtiPay format message, treating as raw");
+                }
+                
+                // If not a valid DrishtiPay message, send as raw message
+                boolean shouldContinue = currentCallback.onRawMessageReceived(rawMessage);
                 if (!shouldContinue) {
                     stopListening();
                 }
+                
             } catch (Exception e) {
                 Log.e(TAG, "Error in message callback", e);
                 currentCallback.onError("Callback error: " + e.getMessage());
@@ -238,6 +257,45 @@ public class GGWaveManager implements IGGWave {
     @Override
     public boolean send(@NonNull String message) {
         return send(message, false, true, null);
+    }
+    
+    @Override
+    public boolean sendMessage(@NonNull GGWaveMessage message, boolean useUltrasound, boolean fastMode, @Nullable GGWaveTransmissionCallback callback) {
+        if (message == null) {
+            throw new IllegalArgumentException("GGWaveMessage cannot be null");
+        }
+        
+        try {
+            String jsonMessage = message.toJson();
+            Log.d(TAG, "Sending structured message with mobile: [REDACTED]"); // Don't log mobile number
+            return send(jsonMessage, useUltrasound, fastMode, callback);
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to convert message to JSON", e);
+            if (callback != null) {
+                callback.onTransmissionError("Failed to serialize message: " + e.getMessage());
+            }
+            return false;
+        }
+    }
+    
+    @Override
+    public boolean sendMessage(@NonNull GGWaveMessage message) {
+        return sendMessage(message, false, true, null);
+    }
+    
+    @Override
+    public boolean sendMobileNumber(@NonNull String mobileNumber) {
+        if (mobileNumber == null || mobileNumber.trim().isEmpty()) {
+            throw new IllegalArgumentException("Mobile number cannot be null or empty");
+        }
+        
+        try {
+            GGWaveMessage message = new GGWaveMessage(mobileNumber.trim());
+            return sendMessage(message);
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to create message for mobile number", e);
+            return false;
+        }
     }
     
     @Override

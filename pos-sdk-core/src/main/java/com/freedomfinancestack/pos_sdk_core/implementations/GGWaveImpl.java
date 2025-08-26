@@ -7,6 +7,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.freedomfinancestack.pos_sdk_core.interfaces.IGGWave;
+import com.freedomfinancestack.pos_sdk_core.models.GGWaveMessage;
 
 /**
  * Default implementation of IGGWave interface using GGWaveManager.
@@ -61,6 +62,21 @@ public class GGWaveImpl implements IGGWave {
     @Override
     public boolean send(@NonNull String message) {
         return manager.send(message);
+    }
+    
+    @Override
+    public boolean sendMessage(@NonNull GGWaveMessage message, boolean useUltrasound, boolean fastMode, @Nullable GGWaveTransmissionCallback callback) {
+        return manager.sendMessage(message, useUltrasound, fastMode, callback);
+    }
+    
+    @Override
+    public boolean sendMessage(@NonNull GGWaveMessage message) {
+        return manager.sendMessage(message);
+    }
+    
+    @Override
+    public boolean sendMobileNumber(@NonNull String mobileNumber) {
+        return manager.sendMobileNumber(mobileNumber);
     }
     
     @Override

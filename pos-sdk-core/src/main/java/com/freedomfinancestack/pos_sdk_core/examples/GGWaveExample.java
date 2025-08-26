@@ -7,6 +7,7 @@ import androidx.annotation.NonNull;
 
 import com.freedomfinancestack.pos_sdk_core.implementations.GGWaveImpl;
 import com.freedomfinancestack.pos_sdk_core.interfaces.IGGWave;
+import com.freedomfinancestack.pos_sdk_core.models.GGWaveMessage;
 
 /**
  * Example demonstrating how to use GGWave functionality in the POS SDK.
@@ -117,6 +118,73 @@ public class GGWaveExample {
     }
     
     /**
+     * Example of sending a DrishtiPay structured message with mobile number.
+     * 
+     * @param mobileNumber The mobile number to send
+     */
+    public void sendDrishtiPayMobile(@NonNull String mobileNumber) {
+        if (ggWave == null || !ggWave.isInitialized()) {
+            Log.e(TAG, "GGWave not initialized");
+            return;
+        }
+        
+        // Use the convenience method for mobile number
+        boolean success = ggWave.sendMobileNumber(mobileNumber);
+        
+        if (success) {
+            Log.d(TAG, "Started DrishtiPay mobile transmission");
+        } else {
+            Log.e(TAG, "Failed to start DrishtiPay mobile transmission");
+        }
+    }
+    
+    /**
+     * Example of sending a custom structured DrishtiPay message.
+     * 
+     * @param mobileNumber The mobile number
+     * @param appType Custom app type
+     * @param transmissionType Custom transmission type
+     */
+    public void sendCustomDrishtiPayMessage(@NonNull String mobileNumber, @NonNull String appType, @NonNull String transmissionType) {
+        if (ggWave == null || !ggWave.isInitialized()) {
+            Log.e(TAG, "GGWave not initialized");
+            return;
+        }
+        
+        try {
+            // Create custom structured message
+            GGWaveMessage message = new GGWaveMessage(mobileNumber, appType, transmissionType);
+            
+            // Send with callback for monitoring
+            boolean success = ggWave.sendMessage(
+                message,
+                false,  // useUltrasound - false for audible range
+                true,   // fastMode - true for faster transmission
+                new IGGWave.GGWaveTransmissionCallback() {
+                    @Override
+                    public void onTransmissionComplete() {
+                        Log.d(TAG, "DrishtiPay message sent successfully");
+                    }
+                    
+                    @Override
+                    public void onTransmissionError(@NonNull String error) {
+                        Log.e(TAG, "DrishtiPay transmission failed: " + error);
+                    }
+                }
+            );
+            
+            if (success) {
+                Log.d(TAG, "Started custom DrishtiPay transmission");
+            } else {
+                Log.e(TAG, "Failed to start custom DrishtiPay transmission");
+            }
+            
+        } catch (Exception e) {
+            Log.e(TAG, "Error creating DrishtiPay message", e);
+        }
+    }
+    
+    /**
      * Example of listening for incoming audio messages.
      */
     public void startListening() {
@@ -127,11 +195,22 @@ public class GGWaveExample {
         
         boolean success = ggWave.startListening(new IGGWave.GGWaveCallback() {
             @Override
-            public boolean onMessageReceived(@NonNull String message) {
-                Log.d(TAG, "Received message: [REDACTED for privacy]");
+            public boolean onMessageReceived(@NonNull GGWaveMessage message) {
+                Log.d(TAG, "Received structured DrishtiPay message: mobile=[REDACTED]");
                 
-                // Process the received message
-                processReceivedMessage(message);
+                // Process the structured message
+                processStructuredMessage(message);
+                
+                // Return true to continue listening, false to stop
+                return true;
+            }
+            
+            @Override
+            public boolean onRawMessageReceived(@NonNull String rawMessage) {
+                Log.d(TAG, "Received raw message: [REDACTED for privacy]");
+                
+                // Process raw message that doesn't match DrishtiPay format
+                processRawMessage(rawMessage);
                 
                 // Return true to continue listening, false to stop
                 return true;
@@ -152,25 +231,66 @@ public class GGWaveExample {
     }
     
     /**
-     * Process a received message (example implementation).
+     * Process received structured DrishtiPay message.
      * 
-     * @param message The received message
+     * @param message The parsed GGWaveMessage
      */
-    private void processReceivedMessage(@NonNull String message) {
+    private void processStructuredMessage(@NonNull GGWaveMessage message) {
         try {
-            // Example: Check if it's a payment response
-            if (message.startsWith("{") && message.contains("payment")) {
-                Log.d(TAG, "Received payment response");
-                // Process payment response JSON
-                handlePaymentResponse(message);
+            Log.d(TAG, "Processing DrishtiPay message");
+            Log.d(TAG, "Mobile number: [REDACTED]"); // Don't log actual mobile
+            Log.d(TAG, "App type: " + message.getAppType());
+            Log.d(TAG, "Transmission type: " + message.getTransmissionType());
+            
+            // Validate message
+            if (message.isValidDrishtiPayMessage()) {
+                Log.d(TAG, "Valid DrishtiPay message format");
+                // Process valid DrishtiPay message
+                handleDrishtiPayMessage(message);
             } else {
-                Log.d(TAG, "Received general message");
-                // Process general message
-                handleGeneralMessage(message);
+                Log.w(TAG, "Invalid DrishtiPay message format");
             }
         } catch (Exception e) {
-            Log.e(TAG, "Error processing received message", e);
+            Log.e(TAG, "Error processing structured message", e);
         }
+    }
+    
+    /**
+     * Process received raw message that doesn't match DrishtiPay format.
+     * 
+     * @param rawMessage The raw decoded text message
+     */
+    private void processRawMessage(@NonNull String rawMessage) {
+        try {
+            Log.d(TAG, "Processing raw message");
+            
+            // Example: Check for other known formats
+            if (rawMessage.startsWith("{") && rawMessage.contains("payment")) {
+                Log.d(TAG, "Received non-DrishtiPay payment response");
+                handlePaymentResponse(rawMessage);
+            } else {
+                Log.d(TAG, "Received general message");
+                handleGeneralMessage(rawMessage);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error processing raw message", e);
+        }
+    }
+    
+    /**
+     * Handle valid DrishtiPay messages.
+     * 
+     * @param message The validated GGWaveMessage
+     */
+    private void handleDrishtiPayMessage(@NonNull GGWaveMessage message) {
+        // Example implementation - handle DrishtiPay specific logic
+        Log.d(TAG, "Processing DrishtiPay transaction");
+        
+        // TODO: Implement DrishtiPay specific handling
+        // Example: Initiate payment, update customer info, etc.
+        
+        // Example: Send acknowledgment (mobile number hidden for privacy)
+        Log.d(TAG, "Would send acknowledgment to mobile number");
     }
     
     /**

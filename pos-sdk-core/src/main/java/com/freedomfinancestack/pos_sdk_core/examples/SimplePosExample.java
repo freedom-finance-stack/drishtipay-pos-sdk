@@ -13,6 +13,7 @@ import com.freedomfinancestack.pos_sdk_core.implementations.PosNfcDeviceManager;
 import com.freedomfinancestack.pos_sdk_core.interfaces.IGGWave;
 import com.freedomfinancestack.pos_sdk_core.interfaces.INfcDeviceManager;
 import com.freedomfinancestack.pos_sdk_core.interfaces.IPosNfcPlugin;
+import com.freedomfinancestack.pos_sdk_core.models.GGWaveMessage;
 
 /**
  * Simple example showing how to use Universal POS SDK features:
@@ -120,11 +121,22 @@ public class SimplePosExample extends Activity {
         
         ggWave.startListening(new IGGWave.GGWaveCallback() {
             @Override
-            public boolean onMessageReceived(@NonNull String message) {
-                Log.d(TAG, "Received audio message");
+            public boolean onMessageReceived(@NonNull GGWaveMessage message) {
+                Log.d(TAG, "Received DrishtiPay audio message");
                 
-                // Process audio-received message
-                processAudioMessage(message);
+                // Process structured DrishtiPay message  
+                showMessage("DrishtiPay message received: " + message.getMobileNumber());
+                
+                // Continue listening for more messages
+                return true;
+            }
+            
+            @Override
+            public boolean onRawMessageReceived(@NonNull String rawMessage) {
+                Log.d(TAG, "Received raw audio message");
+                
+                // Process raw audio message
+                processAudioMessage(rawMessage);
                 
                 // Continue listening for more messages
                 return true;
