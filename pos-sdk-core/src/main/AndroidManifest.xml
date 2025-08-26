@@ -1,10 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- NFC permissions for existing functionality -->
     <uses-permission android:name="android.permission.NFC" />
     <uses-feature
         android:name="android.hardware.nfc"
         android:required="false" />
 
+    <!-- Audio permissions for GGWave functionality -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <uses-feature
+        android:name="android.hardware.microphone"
+        android:required="false" />
+
+    <!-- Internet permission for WebView (if needed for debugging) -->
+    <uses-permission android:name="android.permission.INTERNET" />
 
 </manifest>
