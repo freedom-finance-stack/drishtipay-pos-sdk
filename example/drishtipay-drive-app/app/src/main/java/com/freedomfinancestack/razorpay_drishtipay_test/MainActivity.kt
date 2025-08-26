@@ -24,6 +24,8 @@ import com.freedomfinancestack.pos_sdk_core.implementations.PosNfcDeviceManager
 import com.freedomfinancestack.pos_sdk_core.interfaces.INfcDeviceManager
 import com.freedomfinancestack.pos_sdk_core.models.Card
 import com.freedomfinancestack.pos_sdk_core.implementations.NarratorImpl
+import com.freedomfinancestack.pos_sdk_core.implementations.GGWaveImpl
+import com.freedomfinancestack.pos_sdk_core.interfaces.IGGWave
 import com.freedomfinancestack.razorpay_drishtipay_test.payment.InitiatePayment
 import com.freedomfinancestack.razorpay_drishtipay_test.pos.PaxNeptuneLitePlugin
 import com.freedomfinancestack.razorpay_drishtipay_test.savedcards.ListSavedCards
@@ -36,11 +38,19 @@ class MainActivity : ComponentActivity() {
     private lateinit var cardsService: ListSavedCards
     private lateinit var paymentService: InitiatePayment
     private lateinit var narrator: NarratorImpl
+    private lateinit var ggWave: IGGWave
     private var isListening = mutableStateOf(false)
     private var sdkStatus = mutableStateOf("Not Initialized")
     private var lastPaymentData = mutableStateOf("No payments processed")
     private var pluginMode = mutableStateOf("Mock Mode")
     private var logMessages = mutableStateOf(listOf<String>())
+    
+    // GGWave specific states
+    private var ggWaveStatus = mutableStateOf("Not Initialized")
+    private var ggWaveListening = mutableStateOf(false)
+    private var ggWaveLastMessage = mutableStateOf("")
+    private var ggWaveReceivedMessages = mutableStateOf(listOf<String>())
+    private var ggWaveLogMessages = mutableStateOf(listOf<String>())
 
     // These will be managed inside Composable
     @Volatile
@@ -124,6 +134,9 @@ class MainActivity : ComponentActivity() {
                         "State updated: savedCardsState = ${savedCardsState.size}, showSavedCardsState = $showSavedCardsState"
                     )
                 }
+
+                // GGWave Audio Communication Section
+                GGWaveDemoSection()
 
                 // Saved Cards Section (only show when cards are loaded)
                 if (showSavedCardsState) {
@@ -373,6 +386,183 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     lineHeight = 18.sp
                 )
+            }
+        }
+    }
+
+    @Composable
+    fun GGWaveDemoSection() {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(20.dp)
+            ) {
+                Text(
+                    text = "GGWave Audio Communication",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "Send and receive data using sound waves",
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Status indicator
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Status: ${ggWaveStatus.value}",
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                    Text(
+                        text = if (ggWaveListening.value) "🎤 Listening" else "🔇 Silent",
+                        fontSize = 14.sp,
+                        color = if (ggWaveListening.value) 
+                            MaterialTheme.colorScheme.primary 
+                        else MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.6f)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Control buttons
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = { initializeGGWave() },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Text("Initialize", fontSize = 14.sp)
+                    }
+                    
+                    Button(
+                        onClick = { startGGWaveListening() },
+                        modifier = Modifier.weight(1f),
+                        enabled = ggWaveStatus.value == "Ready",
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (ggWaveListening.value) 
+                                MaterialTheme.colorScheme.error 
+                            else MaterialTheme.colorScheme.secondary
+                        )
+                    ) {
+                        Text(
+                            if (ggWaveListening.value) "Stop" else "Listen",
+                            fontSize = 14.sp
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Send message section
+                Button(
+                    onClick = { sendGGWaveTestMessage() },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = ggWaveStatus.value == "Ready",
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.tertiary
+                    )
+                ) {
+                    Text("Send Test Message", fontSize = 14.sp)
+                }
+
+                // Received Messages Display
+                if (ggWaveReceivedMessages.value.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant
+                        ),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "📨 Received Messages",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    text = "${ggWaveReceivedMessages.value.size} msgs",
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                                )
+                            }
+                            
+                            Spacer(modifier = Modifier.height(8.dp))
+                            
+                            // Scrollable text box for received messages
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(120.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.surface
+                                )
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(12.dp)
+                                        .verticalScroll(rememberScrollState())
+                                ) {
+                                    ggWaveReceivedMessages.value.reversed().forEach { message ->
+                                        Text(
+                                            text = "• $message",
+                                            fontSize = 13.sp,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                            modifier = Modifier.padding(vertical = 2.dp)
+                                        )
+                                    }
+                                }
+                            }
+                            
+                            Spacer(modifier = Modifier.height(8.dp))
+                            
+                            // Clear messages button
+                            Button(
+                                onClick = {
+                                    ggWaveReceivedMessages.value = emptyList()
+                                    ggWaveLastMessage.value = ""
+                                    addGGWaveLog("🗑️ Cleared received messages")
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f),
+                                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            ) {
+                                Text("Clear Messages", fontSize = 12.sp)
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -680,10 +870,16 @@ class MainActivity : ComponentActivity() {
             // Initialize payment service
             paymentService = InitiatePayment()
 
+            // Initialize GGWave with auto volume adjustment
+            ggWave = GGWaveImpl(this, true)
+            ggWaveStatus.value = "Initialized"
+            addGGWaveLog("🔊 GGWave audio communication initialized")
+
             sdkStatus.value = "Initialized Successfully"
             pluginMode.value = "Mock Mode"
             addLog("✅ DrishtiPay POS SDK initialized successfully!")
             addLog("📱 Ready for emulator testing with mock NFC simulation")
+            addLog("🎵 GGWave audio communication ready")
             
         } catch (e: Exception) {
             sdkStatus.value = "Initialization Failed"
@@ -1048,6 +1244,112 @@ class MainActivity : ComponentActivity() {
         }.start()
     }
     
+    // ===================== GGWave Functions =====================
+    
+    private fun initializeGGWave() {
+        try {
+            addGGWaveLog("🔧 Initializing GGWave...")
+            ggWave.initialize {
+                runOnUiThread {
+                    ggWaveStatus.value = "Ready"
+                    addGGWaveLog("✅ GGWave initialized and ready!")
+                    Toast.makeText(this@MainActivity, "GGWave Ready", Toast.LENGTH_SHORT).show()
+                }
+            }
+        } catch (e: Exception) {
+            ggWaveStatus.value = "Error"
+            addGGWaveLog("❌ GGWave initialization failed: ${e.message}")
+        }
+    }
+    
+    private fun startGGWaveListening() {
+        if (ggWaveListening.value) {
+            // Stop listening
+            try {
+                ggWave.stopListening()
+                ggWaveListening.value = false
+                addGGWaveLog("🔇 GGWave listening stopped")
+            } catch (e: Exception) {
+                addGGWaveLog("❌ Error stopping GGWave: ${e.message}")
+            }
+        } else {
+            // Start listening
+            try {
+                val success = ggWave.startListening(object : IGGWave.GGWaveCallback {
+                    override fun onMessageReceived(message: String): Boolean {
+                        runOnUiThread {
+                            // Add timestamp to received message
+                            val timestamp = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault())
+                                .format(java.util.Date())
+                            val timestampedMessage = "[$timestamp] $message"
+                            
+                            // Update last message and add to received messages list
+                            ggWaveLastMessage.value = message
+                            ggWaveReceivedMessages.value = ggWaveReceivedMessages.value + timestampedMessage
+                            
+                            addGGWaveLog("📨 Received: $message")
+                            narrator.speak("Message received: $message")
+                            Toast.makeText(this@MainActivity, "New message received!", Toast.LENGTH_SHORT).show()
+                        }
+                        return true // Continue listening
+                    }
+                    
+                    override fun onError(error: String) {
+                        runOnUiThread {
+                            addGGWaveLog("❌ Receive error: $error")
+                        }
+                    }
+                })
+                if (success) {
+                    ggWaveListening.value = true
+                    addGGWaveLog("🎤 GGWave listening started")
+                } else {
+                    addGGWaveLog("❌ Failed to start GGWave listening")
+                }
+            } catch (e: Exception) {
+                addGGWaveLog("❌ Error starting GGWave: ${e.message}")
+            }
+        }
+    }
+    
+    private fun sendGGWaveTestMessage() {
+        try {
+            val testMessage = "DrishtiPay-Test-${System.currentTimeMillis()}"
+            addGGWaveLog("📤 Sending: $testMessage")
+            
+            val success = ggWave.send(testMessage, false, true, object : IGGWave.GGWaveTransmissionCallback {
+                override fun onTransmissionComplete() {
+                    runOnUiThread {
+                        addGGWaveLog("✅ Message sent successfully!")
+                        narrator.speak("Message sent")
+                        Toast.makeText(this@MainActivity, "Message sent!", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                
+                override fun onTransmissionError(error: String) {
+                    runOnUiThread {
+                        addGGWaveLog("❌ Send error: $error")
+                    }
+                }
+            })
+            
+            if (!success) {
+                addGGWaveLog("❌ Failed to start transmission")
+            }
+        } catch (e: Exception) {
+            addGGWaveLog("❌ Error sending message: ${e.message}")
+        }
+    }
+    
+    private fun addGGWaveLog(message: String) {
+        val timestamp = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault())
+            .format(java.util.Date())
+        val logEntry = "[$timestamp] $message"
+
+        ggWaveLogMessages.value = ggWaveLogMessages.value + logEntry
+        Log.d("GGWave", message)
+    }
+    
     override fun onDestroy() {
         super.onDestroy()
         // Clean up SDK resources
@@ -1057,6 +1359,11 @@ class MainActivity : ComponentActivity() {
             if (nfcManager is PosNfcDeviceManager) {
                 (nfcManager as PosNfcDeviceManager).cleanup()
             }
+            }
+            
+            // Clean up GGWave resources
+            if (::ggWave.isInitialized) {
+                ggWave.cleanup()
             }
             
             // Clean up narrator

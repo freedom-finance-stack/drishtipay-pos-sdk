@@ -1,5 +1,10 @@
 # How to Use Drishti Pay POS SDK
 
+The Drishti Pay POS SDK provides comprehensive payment functionality including:
+- **NFC Payments**: Tap-to-pay transactions
+- **Audio Payments**: GGWave audio-based data transmission
+- **Multi-device Support**: Works with PAX, Ingenico, Verifone, and more
+
 ## 📦 Installation
 
 ### Step 1: Add to your app's `build.gradle`
@@ -20,7 +25,9 @@ allprojects {
 }
 ```
 
-## 🚀 Quick Start (3 Lines of Code!)
+## 🚀 Quick Start
+
+### NFC Payments (3 Lines of Code!)
 
 ```java
 // Step 1: Create NFC manager
@@ -41,6 +48,32 @@ nfc.startListening(new INfcDeviceManager.NdefCallback() {
 
 // Step 3: Stop when done
 nfc.stopListening();
+```
+
+### Audio Payments with GGWave
+
+```java
+// Step 1: Create GGWave instance
+IGGWave ggWave = new GGWaveImpl(context);
+
+// Step 2: Initialize and start listening
+ggWave.initialize(() -> {
+    ggWave.startListening(new IGGWave.GGWaveCallback() {
+        @Override
+        public boolean onMessageReceived(String message) {
+            // Process audio payment data
+            return true; // Continue listening
+        }
+        
+        @Override
+        public void onError(String error) {
+            // Handle error
+        }
+    });
+});
+
+// Step 3: Send payment confirmation
+ggWave.send("PAYMENT_CONFIRMED");
 ```
 
 ## 🏪 Real Example
