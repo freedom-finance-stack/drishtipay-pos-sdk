@@ -111,16 +111,16 @@ class MainActivity : ComponentActivity() {
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 // NFC Payment Simulation Section
-                VarunTestSection { newCards, showCards ->
+                TestSection { newCards, showCards ->
                     Log.d(
-                        "VarunDebug",
+                        "Debug",
                         "Callback received: ${newCards.size} cards, show = $showCards"
                     )
                     savedCardsState = newCards
                     showSavedCardsState = showCards
                     forceRefresh++ // Force recomposition
                     Log.d(
-                        "VarunDebug",
+                        "Debug",
                         "State updated: savedCardsState = ${savedCardsState.size}, showSavedCardsState = $showSavedCardsState"
                     )
                 }
@@ -128,13 +128,13 @@ class MainActivity : ComponentActivity() {
                 // Saved Cards Section (only show when cards are loaded)
                 if (showSavedCardsState) {
                     Log.d(
-                        "VarunDebug",
+                        "Debug",
                         "SHOWING SavedCardsSection with ${savedCardsState.size} cards!"
                     )
                     SavedCardsSection(savedCardsState) { card ->
-                        Log.d("VarunDebug", "Card clicked: ${card.last4Digits}")
+                        Log.d("Debug", "Card clicked: ${card.last4Digits}")
                         initiatePaymentForCard(card) { response ->
-                            Log.d("VarunDebug", "Payment response received")
+                            Log.d("Debug", "Payment response received")
                             paymentResponseState = response
                         }
                     }
@@ -200,125 +200,125 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+//    @Composable
+//    fun ControlButtonsSection() {
+//        Card(modifier = Modifier.fillMaxWidth()) {
+//            Column(
+//                modifier = Modifier.padding(16.dp)
+//            ) {
+//                Text(
+//                    text = "NFC Controls",
+//                    fontSize = 18.sp,
+//                    fontWeight = FontWeight.Bold
+//                )
+//                Spacer(modifier = Modifier.height(12.dp))
+//
+//                Row(
+//                    modifier = Modifier.fillMaxWidth(),
+//                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+//                ) {
+//                    Button(
+//                        onClick = { startNfcListening() },
+//                        enabled = !isListening.value,
+//                        modifier = Modifier.weight(1f)
+//                    ) {
+//                        Text("Start Listening")
+//                    }
+//
+//                    Button(
+//                        onClick = { stopNfcListening() },
+//                        enabled = isListening.value,
+//                        modifier = Modifier.weight(1f),
+//                        colors = ButtonDefaults.buttonColors(
+//                            containerColor = MaterialTheme.colorScheme.error
+//                        )
+//                    ) {
+//                        Text("Stop Listening")
+//                    }
+//                }
+//
+//                Spacer(modifier = Modifier.height(8.dp))
+//
+//                // Simulation button (only in mock mode)
+//                Button(
+//                    onClick = { simulateNfcTap() },
+//                    modifier = Modifier.fillMaxWidth(),
+//                    enabled = isListening.value && pluginMode.value == "Mock Mode",
+//                    colors = ButtonDefaults.buttonColors(
+//                        containerColor = MaterialTheme.colorScheme.secondary
+//                    )
+//                ) {
+//                    Text("Simulate NFC Tap (Emulator Testing)")
+//                }
+//
+//                Spacer(modifier = Modifier.height(8.dp))
+//
+//                Button(
+//                    onClick = { testSavedCards() },
+//                    modifier = Modifier.fillMaxWidth(),
+//                    colors = ButtonDefaults.buttonColors(
+//                        containerColor = MaterialTheme.colorScheme.tertiary
+//                    )
+//                ) {
+//                    Text("🃏 Test Saved Cards API")
+//                }
+//            }
+//        }
+//    }
+
+//    @Composable
+//    fun ModeConfigurationSection() {
+//        Card(modifier = Modifier.fillMaxWidth()) {
+//            Column(
+//                modifier = Modifier.padding(16.dp)
+//            ) {
+//                Text(
+//                    text = "Plugin Configuration",
+//                    fontSize = 18.sp,
+//                    fontWeight = FontWeight.Bold
+//                )
+//                Spacer(modifier = Modifier.height(12.dp))
+//
+//                Row(
+//                    modifier = Modifier.fillMaxWidth(),
+//                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+//                ) {
+//                    Button(
+//                        onClick = { switchToMockMode() },
+//                        enabled = !isListening.value,
+//                        modifier = Modifier.weight(1f),
+//                        colors = if (pluginMode.value == "Mock Mode")
+//                            ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+//                        else ButtonDefaults.buttonColors()
+//                    ) {
+//                        Text("Mock Mode")
+//                    }
+//
+//                    Button(
+//                        onClick = { switchToRealMode() },
+//                        enabled = !isListening.value,
+//                        modifier = Modifier.weight(1f),
+//                        colors = if (pluginMode.value == "Real PAX Mode")
+//                            ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+//                        else ButtonDefaults.buttonColors()
+//                    ) {
+//                        Text("Real PAX Mode")
+//                    }
+//                }
+//
+//                Spacer(modifier = Modifier.height(8.dp))
+//
+//                Text(
+//                    text = "Mock Mode: For emulator testing without real PAX hardware\nReal PAX Mode: For actual PAX A920/A930 devices",
+//                    fontSize = 12.sp,
+//                    color = MaterialTheme.colorScheme.onSurfaceVariant
+//                )
+//            }
+//        }
+//    }
+
     @Composable
-    fun ControlButtonsSection() {
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Column(
-                modifier = Modifier.padding(16.dp)
-            ) {
-                Text(
-                    text = "NFC Controls",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Button(
-                        onClick = { startNfcListening() },
-                        enabled = !isListening.value,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text("Start Listening")
-                    }
-
-                    Button(
-                        onClick = { stopNfcListening() },
-                        enabled = isListening.value,
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.error
-                        )
-                    ) {
-                        Text("Stop Listening")
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Simulation button (only in mock mode)
-                Button(
-                    onClick = { simulateNfcTap() },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = isListening.value && pluginMode.value == "Mock Mode",
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.secondary
-                    )
-                ) {
-                    Text("Simulate NFC Tap (Emulator Testing)")
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Button(
-                    onClick = { testSavedCards() },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.tertiary
-                    )
-                ) {
-                    Text("🃏 Test Saved Cards API")
-                }
-            }
-        }
-    }
-
-    @Composable
-    fun ModeConfigurationSection() {
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Column(
-                modifier = Modifier.padding(16.dp)
-            ) {
-                Text(
-                    text = "Plugin Configuration",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Button(
-                        onClick = { switchToMockMode() },
-                        enabled = !isListening.value,
-                        modifier = Modifier.weight(1f),
-                        colors = if (pluginMode.value == "Mock Mode")
-                            ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                        else ButtonDefaults.buttonColors()
-                    ) {
-                        Text("Mock Mode")
-                    }
-
-                    Button(
-                        onClick = { switchToRealMode() },
-                        enabled = !isListening.value,
-                        modifier = Modifier.weight(1f),
-                        colors = if (pluginMode.value == "Real PAX Mode")
-                            ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                        else ButtonDefaults.buttonColors()
-                    ) {
-                        Text("Real PAX Mode")
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = "Mock Mode: For emulator testing without real PAX hardware\nReal PAX Mode: For actual PAX A920/A930 devices",
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-    }
-
-    @Composable
-    fun VarunTestSection(onCardsLoaded: (List<Card>, Boolean) -> Unit) {
+    fun TestSection(onCardsLoaded: (List<Card>, Boolean) -> Unit) {
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
@@ -347,9 +347,9 @@ class MainActivity : ComponentActivity() {
 
                 Button(
                     onClick = {
-                        Log.d("VarunDebug", "Start button CLICKED!")
-                        narrator.speak("Hello my name is Varun Bansal")
-                        startVarunTest(onCardsLoaded)
+                        Log.d("Debug", "Start button CLICKED!")
+                        narrator.speak("Initiating the transaction of 10 Rupees")
+                        startTransaction(onCardsLoaded)
                     },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
@@ -380,7 +380,7 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun SavedCardsSection(cards: List<Card>, onCardClick: (Card) -> Unit) {
         Log.d(
-            "VarunDebug",
+            "Debug",
             "SavedCardsSection: FUNCTION ENTRY - COMPOSING with ${cards.size} cards"
         )
 
@@ -419,7 +419,7 @@ class MainActivity : ComponentActivity() {
 
                 // Professional card list
                 cards.forEachIndexed { index, card ->
-                    Log.d("VarunDebug", "Creating UI for card $index: ****${card.last4Digits}")
+                    Log.d("Debug", "Creating UI for card $index: ****${card.last4Digits}")
 
                     Card(
                         modifier = Modifier
@@ -460,7 +460,7 @@ class MainActivity : ComponentActivity() {
 
                             Button(
                                 onClick = {
-                                    Log.d("VarunDebug", "Card clicked: ****${card.last4Digits}")
+                                    Log.d("Debug", "Card clicked: ****${card.last4Digits}")
                                     onCardClick(card)
                                 },
                                 colors = ButtonDefaults.buttonColors(
@@ -486,7 +486,7 @@ class MainActivity : ComponentActivity() {
                 // Professional hide button
                 Button(
                     onClick = {
-                        Log.d("VarunDebug", "Hide Cards clicked")
+                        Log.d("Debug", "Hide Cards clicked")
                         showSavedCards = false
                         savedCardsList = emptyList()
                     },
@@ -549,7 +549,7 @@ class MainActivity : ComponentActivity() {
                 if (lastThreeDSContent.isNotEmpty()) {
                     Button(
                         onClick = {
-                            Log.d("VarunTest", "Reopening 3DS authentication")
+                            Log.d("Test", "Reopening 3DS authentication")
                             ThreeDSWebViewActivity.start(
                                 this@MainActivity,
                                 lastThreeDSContent,
@@ -668,7 +668,7 @@ class MainActivity : ComponentActivity() {
             // Create PAX plugin in mock mode by default
             paxPlugin = PaxNeptuneLitePlugin().apply {
                 setMockMode(true)
-                setAutoSimulation(true, 3000) // Auto-simulate after 3 seconds
+                setAutoSimulation(true, 2000) // Auto-simulate after 3 seconds
             }
 
             // Initialize the POS NFC Device Manager with PAX plugin
@@ -678,7 +678,9 @@ class MainActivity : ComponentActivity() {
             cardsService = ListSavedCards()
 
             // Initialize payment service
-            paymentService = InitiatePayment()
+            Log.d("MainActivity", "Creating InitiatePayment instance...")
+            paymentService = InitiatePayment(this@MainActivity)
+            Log.d("MainActivity", "InitiatePayment instance created successfully")
 
             sdkStatus.value = "Initialized Successfully"
             pluginMode.value = "Mock Mode"
@@ -756,9 +758,9 @@ class MainActivity : ComponentActivity() {
         try {
             addLog("🃏 Testing Saved Cards API...")
 
-            // Call the saved cards API with mock data
-            val merchantId = "CO9vBE2ZlgawZYVDx2Y9"
-            val contact = "+918955496900"
+            // Call the saved cards API with configuration from BuildConfig
+            val merchantId = BuildConfig.MERCHANT_ID
+            val contact = BuildConfig.TEST_CONTACT
 
             val savedCardsList = cardsService.listAllSavedCards(merchantId, contact)
 
@@ -794,28 +796,30 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun switchToMockMode() {
-        try {
-            addLog("🔄 Switching to Mock Mode...")
-            paxPlugin.setMockMode(true)
-            pluginMode.value = "Mock Mode"
-            addLog("✅ Switched to Mock Mode - suitable for emulator testing")
-        } catch (e: Exception) {
-            addLog("❌ Failed to switch to mock mode: ${e.message}")
-        }
-    }
 
-    private fun switchToRealMode() {
-        try {
-            addLog("🔄 Switching to Real PAX Mode...")
-            paxPlugin.setMockMode(false)
-            pluginMode.value = "Real PAX Mode"
-            addLog("⚠️ Switched to Real PAX Mode - requires actual PAX hardware")
-            addLog("📝 Note: Real PAX SDK integration is placeholder - will use mock fallback")
-        } catch (e: Exception) {
-            addLog("❌ Failed to switch to real mode: ${e.message}")
-        }
-    }
+
+//    private fun switchToMockMode() {
+//        try {
+//            addLog("🔄 Switching to Mock Mode...")
+//            paxPlugin.setMockMode(true)
+//            pluginMode.value = "Mock Mode"
+//            addLog("✅ Switched to Mock Mode - suitable for emulator testing")
+//        } catch (e: Exception) {
+//            addLog("❌ Failed to switch to mock mode: ${e.message}")
+//        }
+//    }
+
+//    private fun switchToRealMode() {
+//        try {
+//            addLog("🔄 Switching to Real PAX Mode...")
+//            paxPlugin.setMockMode(false)
+//            pluginMode.value = "Real PAX Mode"
+//            addLog("⚠️ Switched to Real PAX Mode - requires actual PAX hardware")
+//            addLog("📝 Note: Real PAX SDK integration is placeholder - will use mock fallback")
+//        } catch (e: Exception) {
+//            addLog("❌ Failed to switch to real mode: ${e.message}")
+//        }
+//    }
 
     private fun processPayment(message: NdefMessage) {
         try {
@@ -880,48 +884,51 @@ class MainActivity : ComponentActivity() {
         addLog("📋 Logs cleared")
     }
 
-    private fun startVarunTest(onCardsLoaded: (List<Card>, Boolean) -> Unit) {
-        Log.d("VarunDebug", "🔥 startVarunTest: FUNCTION CALLED!")
-        addLog("🚀 Varun Start button clicked!")
+    // todo
+    private fun startTransaction(onCardsLoaded: (List<Card>, Boolean) -> Unit) {
+        Log.d("Debug", "🔥 startTest: FUNCTION CALLED!")
+        addLog("🚀  Start button clicked!")
 
         try {
-            Log.d("VarunDebug", "🔥 startVarunTest: Starting card loading process")
+            Log.d("Debug", "🔥 startTest: Starting card loading process")
             addLog("📋 Loading saved cards...")
 
             if (!::cardsService.isInitialized) {
-                Log.e("VarunDebug", "🔥 ERROR: cardsService not initialized!")
+                Log.e("Debug", "🔥 ERROR: cardsService not initialized!")
                 addLog("❌ cardsService not initialized!")
                 return
             }
 
-            Log.d("VarunDebug", "🔥 cardsService is initialized, proceeding...")
+            Log.d("Debug", "🔥 cardsService is initialized, proceeding...")
 
             val merchantId = "CO9vBE2ZlgawZYVDx2Y9"
+
+            //todo fix this. this will not be hardcoded.
             val contact = "+918955496900"
 
             Log.d(
-                "VarunDebug",
+                "Debug",
                 "🔥 Calling listAllSavedCards with merchantId: $merchantId, contact: $contact"
             )
             val savedCardsResponse = cardsService.listAllSavedCards(merchantId, contact)
-            Log.d("VarunDebug", "🔥 Got savedCardsResponse with ${savedCardsResponse.size} items")
+            Log.d("Debug", "🔥 Got savedCardsResponse with ${savedCardsResponse.size} items")
 
             val cards = savedCardsResponse.flatMap { it.cards.toList() }
-            Log.d("VarunDebug", "🔥 Extracted ${cards.size} cards from response")
+            Log.d("Debug", "🔥 Extracted ${cards.size} cards from response")
 
             cards.forEachIndexed { index, card ->
                 Log.d(
-                    "VarunDebug",
+                    "Debug",
                     "🔥 Card $index: ID=${card.cardId}, Last4=${card.last4Digits}, Network=${card.network}"
                 )
             }
 
-            Log.d("VarunDebug", "🔥 About to call onCardsLoaded callback with ${cards.size} cards")
+            Log.d("Debug", "🔥 About to call onCardsLoaded callback with ${cards.size} cards")
 
             // Force UI update on main thread
             runOnUiThread {
                 onCardsLoaded(cards, true)
-                Log.d("VarunDebug", "🔥 onCardsLoaded callback completed on UI thread!")
+                Log.d("Debug", "🔥 onCardsLoaded callback completed on UI thread!")
             }
 
             addLog("✅ Loaded ${cards.size} saved cards")
@@ -931,18 +938,18 @@ class MainActivity : ComponentActivity() {
                 .show()
 
         } catch (e: Exception) {
-            Log.e("VarunDebug", "🔥 ERROR in startVarunTest: ${e.message}", e)
-            addLog("❌ Error in Varun test: ${e.message}")
+            Log.e("Debug", "🔥 ERROR in startTest: ${e.message}", e)
+            addLog("❌ Error in  test: ${e.message}")
             Toast.makeText(this, "Error loading cards: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
 
     private fun initiatePaymentForCard(card: Card, onResponse: (String) -> Unit) {
-        Log.d("VarunTest", "💰 Initiating payment for card ****${card.last4Digits}")
+        Log.d("Test", "💰 Initiating payment for card ****${card.last4Digits}")
         addLog("💰 Initiating payment for card ****${card.last4Digits}")
 
         if (!::paymentService.isInitialized) {
-            Log.e("VarunTest", "❌ paymentService not initialized!")
+            Log.e("Test", "❌ paymentService not initialized!")
             addLog("❌ paymentService not initialized!")
             return
         }
@@ -950,11 +957,11 @@ class MainActivity : ComponentActivity() {
         // Run payment on background thread
         Thread {
             try {
-                Log.d("VarunTest", "🔄 Processing payment...")
+                Log.d("Test", "🔄 Processing payment...")
                 addLog("🔄 Processing payment...")
 
                 val response = paymentService.initiatePayment(card, 10.0f)
-                Log.d("VarunTest", "Payment response received: $response")
+                Log.d("Test", "Payment response received: $response")
 
                 runOnUiThread {
                     if (response != null) {
@@ -968,14 +975,14 @@ class MainActivity : ComponentActivity() {
                             ) || acsUrl.length > 500
                         ) {
                             Log.d(
-                                "VarunTest",
+                                "Test",
                                 "🔥🌐 HTML response detected in acsURL - 3DS authentication required!"
                             )
-                            Log.d("VarunTest", "🔥🌐 HTML Content Preview: ${acsUrl.take(200)}...")
+                            Log.d("Test", "🔥🌐 HTML Content Preview: ${acsUrl.take(200)}...")
                             addLog("🔐 3DS Authentication required - opening WebView")
 
                             // 🔥 LAUNCH FULLSCREEN WEBVIEW ONLY - No inline backup
-                            Log.d("VarunTest", "🔥🌐 Launching fullscreen 3DS WebView activity ONLY")
+                            Log.d("Test", "🔥🌐 Launching fullscreen 3DS WebView activity ONLY")
                             ThreeDSWebViewActivity.start(this@MainActivity, acsUrl, paymentId)
 
                             // Show response in payment section with reopen option
@@ -993,7 +1000,7 @@ class MainActivity : ComponentActivity() {
 
                             // 🚫 DO NOT SET INLINE WEBVIEW - Keep it clean!
                             Log.d(
-                                "VarunTest",
+                                "Test",
                                 "🔥🌐 NOT setting inline WebView variables - fullscreen only"
                             )
                         } else {
@@ -1029,12 +1036,12 @@ class MainActivity : ComponentActivity() {
                     } else {
                         onResponse("❌ Payment failed - no response received")
                         addLog("❌ Payment failed - null response")
-                        Log.e("VarunTest", "❌ Payment failed - null response")
+                        Log.e("Test", "❌ Payment failed - null response")
                     }
                 }
 
             } catch (e: Exception) {
-                Log.e("VarunTest", "❌ Payment error: ${e.message}", e)
+                Log.e("Test", "❌ Payment error: ${e.message}", e)
                 runOnUiThread {
                     onResponse("❌ Payment Error: ${e.message}")
                     addLog("❌ Payment error: ${e.message}")

@@ -19,11 +19,53 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Load properties from local.properties
+            def localProperties = new Properties()
+            def localPropertiesFile = rootProject.file('local.properties')
+            if (localPropertiesFile.exists()) {
+                localPropertiesFile.withInputStream { localProperties.load(it) }
+            }
+            
+            def razorpayKey = localProperties.getProperty('RAZORPAY_KEY') ?: System.getenv('RAZORPAY_KEY') ?: ''
+            def razorpaySecret = localProperties.getProperty('RAZORPAY_SECRET') ?: System.getenv('RAZORPAY_SECRET') ?: ''
+            def merchantId = localProperties.getProperty('MERCHANT_ID') ?: System.getenv('MERCHANT_ID') ?: ''
+            def testContact = localProperties.getProperty('TEST_CONTACT') ?: System.getenv('TEST_CONTACT') ?: ''
+            
+            buildConfigField "String", "RAZORPAY_KEY", "\"${razorpayKey}\""
+            buildConfigField "String", "RAZORPAY_SECRET", "\"${razorpaySecret}\""
+            buildConfigField "String", "MERCHANT_ID", "\"${merchantId}\""
+            buildConfigField "String", "TEST_CONTACT", "\"${testContact}\""
+            buildConfigField "String", "BASE_URL", "\"https://api.razorpay.com/v1/\""
+            buildConfigField "boolean", "DEBUG_MODE", "true"
+        }
+        
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            
+            // Load properties from local.properties
+            def localProperties = new Properties()
+            def localPropertiesFile = rootProject.file('local.properties')
+            if (localPropertiesFile.exists()) {
+                localPropertiesFile.withInputStream { localProperties.load(it) }
+            }
+            
+            // For release, prefer environment variables over local.properties for security
+            def razorpayKey = System.getenv('RAZORPAY_KEY') ?: localProperties.getProperty('RAZORPAY_KEY') ?: ''
+            def razorpaySecret = System.getenv('RAZORPAY_SECRET') ?: localProperties.getProperty('RAZORPAY_SECRET') ?: ''
+            def merchantId = System.getenv('MERCHANT_ID') ?: localProperties.getProperty('MERCHANT_ID') ?: ''
+            def testContact = System.getenv('TEST_CONTACT') ?: localProperties.getProperty('TEST_CONTACT') ?: ''
+            
+            buildConfigField "String", "RAZORPAY_KEY", "\"${razorpayKey}\""
+            buildConfigField "String", "RAZORPAY_SECRET", "\"${razorpaySecret}\""
+            buildConfigField "String", "MERCHANT_ID", "\"${merchantId}\""
+            buildConfigField "String", "TEST_CONTACT", "\"${testContact}\""
+            buildConfigField "String", "BASE_URL", "\"https://api.razorpay.com/v1/\""
+            buildConfigField "boolean", "DEBUG_MODE", "false"
         }
     }
+    
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_11
         targetCompatibility JavaVersion.VERSION_11
@@ -33,6 +75,7 @@ android {
     }
     buildFeatures {
         compose true
+        buildConfig true
     }
 }
 
