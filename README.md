@@ -1,451 +1,330 @@
-# 🏪 DrishtiPay POS SDK
+# DrishtiPay POS SDK
 
-[![Android](https://img.shields.io/badge/Platform-Android-green.svg?style=flat)](https://android.com)
-[![Java 11](https://img.shields.io/badge/Java-11-orange.svg?style=flat)](https://openjdk.java.net/projects/jdk/11/)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg?style=flat)](LICENSE)
-[![MinSDK](https://img.shields.io/badge/MinSDK-23-red.svg?style=flat)](https://developer.android.com/about/versions/marshmallow/android-6.0)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Android API](https://img.shields.io/badge/API-23%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=23)
+[![Java Version](https://img.shields.io/badge/Java-11-blue.svg)](https://www.oracle.com/java/technologies/javase-jdk11-downloads.html)
 
-**Universal Android SDK for POS machine NFC payment processing** - supports PAX, Ingenico, Verifone, and any manufacturer through a plugin architecture.
+A comprehensive, plugin-based Android SDK for Point of Sale (POS) systems that provides unified NFC payment processing and audio-based data transmission capabilities. Built with a modular architecture that supports multiple POS hardware manufacturers through a clean plugin interface.
 
----
+## 🚀 Features
 
-## 🎯 Overview
+### Core Capabilities
+- **Universal NFC Support**: Unified interface for NFC payment processing across different POS devices
+- **Plugin Architecture**: Extensible design supporting PAX, Ingenico, Verifone, and other POS manufacturers
+- **Audio Data Transmission**: GGWave-powered sound-based data transfer for contactless interactions
+- **Payment Processing**: Comprehensive payment handling with support for cards, UPI, and contactless payments
+- **Mock & Real Modes**: Development-friendly with simulation capabilities for testing without hardware
 
-DrishtiPay POS SDK is a production-ready Android library that enables seamless NFC payment processing across different Point of Sale (POS) manufacturers. Built with a **plugin architecture**, it provides a unified API while allowing organizations to integrate their specific manufacturer SDKs.
 
-### ✨ Key Features
+## 📋 Table of Contents
 
-- 🔌 **Plugin Architecture** - Core defines interfaces, organizations bring manufacturer implementations
-- 🏪 **Multi-Manufacturer Support** - PAX, Ingenico, Verifone, and custom implementations
-- 📱 **NFC Payment Processing** - Contactless payments with phones and cards
-- 💳 **Card Management** - Save, list, and manage customer payment cards
-- 🔒 **Secure & PCI Compliant** - Built-in security best practices
-- 🧪 **Mock Mode** - Test without manufacturer hardware
-- 📚 **Simple Integration** - 3 lines of code to get started
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Architecture](#architecture)
+- [API Reference](#api-reference)
+- [Examples](#examples)
+- [GGWave Integration](#ggwave-integration)
 
-### 🏗️ Architecture
+- [License](#license)
 
-```
-┌─────────────────────────────────────────┐
-│              Your POS App               │
-├─────────────────────────────────────────┤
-│           DrishtiPay Core SDK           │
-│  ┌─────────────┐  ┌─────────────────┐  │
-│  │ Interfaces  │  │ Implementations │  │
-│  │             │  │                 │  │
-│  │ INfcDevice  │  │ PosNfcDevice    │  │
-│  │ Manager     │  │ Manager         │  │
-│  │             │  │                 │  │
-│  │ IPosNfc     │  │ Mock Plugin     │  │
-│  │ Plugin      │  │ (Testing)       │  │
-│  │             │  │                 │  │
-│  │ IPayment    │  │                 │  │
-│  │ ICards      │  │                 │  │
-│  └─────────────┘  └─────────────────┘  │
-├─────────────────────────────────────────┤
-│        Manufacturer Plugins             │
-│  ┌─────────┐ ┌─────────┐ ┌─────────┐   │
-│  │   PAX   │ │Ingenico │ │Verifone │   │
-│  │ Plugin  │ │ Plugin  │ │ Plugin  │   │
-│  └─────────┘ └─────────┘ └─────────┘   │
-└─────────────────────────────────────────┘
-```
+## 🛠 Installation
 
----
+### Gradle Dependency
 
-## 🚀 Quick Start
+Add the following to your app's `build.gradle`:
 
-### Installation
-
-**Step 1:** Add to your app's `build.gradle`:
 ```gradle
 dependencies {
     implementation 'com.freedomfinancestack:pos-sdk-core:1.0.0'
+    
+    // Required for GGWave functionality
+    implementation 'androidx.webkit:webkit:1.8.0'
+    implementation 'androidx.annotation:annotation:1.7.1'
 }
 ```
 
-**Step 2:** Add to your project's `build.gradle`:
-```gradle
-allprojects {
-    repositories {
-        google()
-        mavenCentral()
-    }
-}
+### Permissions
+
+Add these permissions to your `AndroidManifest.xml`:
+
+```xml
+<!-- NFC permissions -->
+<uses-permission android:name="android.permission.NFC" />
+<uses-feature android:name="android.hardware.nfc" android:required="false" />
+
+<!-- Audio permissions for GGWave -->
+<uses-permission android:name="android.permission.RECORD_AUDIO" />
+<uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+<uses-feature android:name="android.hardware.microphone" android:required="false" />
+
+<!-- Internet permission  -->
+<uses-permission android:name="android.permission.INTERNET" />
 ```
 
-### Basic Usage (3 Lines!)
+## 🚀 Quick Start
+
+### Basic NFC Payment Processing
 
 ```java
-// Step 1: Create NFC manager
-INfcDeviceManager nfc = new PosNfcDeviceManager(context);
+// Initialize the POS NFC Device Manager
+INfcDeviceManager nfcManager = new PosNfcDeviceManager();
 
-// Step 2: Start listening for payments
-nfc.startListening(new INfcDeviceManager.NdefCallback() {
+// Set up your plugin (example with PAX)
+IPosNfcPlugin paxPlugin = new PaxNeptuneLitePlugin();
+paxPlugin.initialize(context);
+
+// Register the plugin
+((PosNfcDeviceManager) nfcManager).setPlugin(paxPlugin);
+
+// Start listening for NFC payments
+nfcManager.startListening(new INfcDeviceManager.NdefCallback() {
     @Override
     public void onNdefMessageDiscovered(NdefMessage message) {
-        // Customer tapped phone - process payment!
-        processPayment(message);
+        // Process payment data
+        Log.d("Payment", "Payment received: " + new String(message.getRecords()[0].getPayload()));
+    }
+    
+    @Override
+    public void onError(String errorMessage) {
+        Log.e("Payment", "Payment error: " + errorMessage);
+    }
+});
+```
+
+### Audio Data Transmission with GGWave
+
+```java
+// Initialize GGWave
+IGGWave ggWave = new GGWaveImpl(context, true); // auto-adjust volume
+
+ggWave.initialize(() -> {
+    // Send a message over audio
+    ggWave.send("Hello POS World!", false, true, new IGGWave.GGWaveTransmissionCallback() {
+        @Override
+        public void onTransmissionComplete() {
+            Log.d("GGWave", "Message sent successfully");
+        }
+        
+        @Override
+        public void onTransmissionError(String error) {
+            Log.e("GGWave", "Transmission failed: " + error);
+        }
+    });
+});
+
+// Listen for incoming audio messages
+ggWave.startListening(new IGGWave.GGWaveCallback() {
+    @Override
+    public boolean onMessageReceived(GGWaveMessage message) {
+        Log.d("GGWave", "Received DrishtiPay message from: " + message.getMobileNumber());
+        return true; // Continue listening
+    }
+    
+    @Override
+    public boolean onRawMessageReceived(String rawMessage) {
+        Log.d("GGWave", "Received raw message: " + rawMessage);
+        return true;
     }
     
     @Override
     public void onError(String error) {
-        // Handle error
-        Log.e("Payment", "Error: " + error);
+        Log.e("GGWave", "Reception error: " + error);
     }
 });
-
-// Step 3: Stop when done
-nfc.stopListening();
 ```
 
----
+## 🏗 Architecture
 
-## 💼 Production Integration
+The SDK follows a clean plugin architecture that separates core functionality from manufacturer-specific implementations:
 
-### Plugin-Based Setup
-
-For production with manufacturer SDKs:
-
-```java
-public class PaymentActivity extends Activity {
-    
-    private INfcDeviceManager nfcManager;
-    
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        
-        // Initialize with your manufacturer plugin
-        IPosNfcPlugin plugin = new YourManufacturerPlugin();
-        nfcManager = new PosNfcDeviceManager(this, plugin);
-        
-        startPaymentSession();
-    }
-    
-    private void startPaymentSession() {
-        nfcManager.startListening(new INfcDeviceManager.NdefCallback() {
-            @Override
-            public void onNdefMessageDiscovered(NdefMessage message) {
-                // Process the payment
-                handlePayment(message);
-            }
-            
-            @Override
-            public void onError(String error) {
-                showError("Payment failed: " + error);
-            }
-        });
-    }
-    
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (nfcManager != null) {
-            nfcManager.stopListening();
-            ((PosNfcDeviceManager) nfcManager).cleanup();
-        }
-    }
-}
+```
+┌─────────────────────────────────────────────────────────┐
+│                    Your Application                     │
+├─────────────────────────────────────────────────────────┤
+│                    POS SDK Core                         │
+│  ┌─────────────────┐  ┌─────────────────┐               │
+│  │   NFC Manager   │  │   GGWave Audio  │               │
+│  │   (Universal)   │  │   Transmission  │               │
+│  └─────────────────┘  └─────────────────┘               │
+├─────────────────────────────────-───────────────────────┤
+│                  Plugin Interface                       │
+├─────────────────────────────────────────────────────────┤
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐      │
+│  │ PAX Plugin  │  │Ingenico     │  │  Your       │      │
+│  │ (Neptune)   │  │Plugin       │  │  Custom     │      │
+│  │             │  │             │  │  Plugin     │      │
+│  └─────────────┘  └─────────────┘  └─────────────┘      │
+└─────────────────────────────────────────────────────────┘
 ```
 
-### Creating Manufacturer Plugins
+### Core Components
 
-Implement `IPosNfcPlugin` for your POS hardware:
+- **`pos-sdk-core`**: Core library with interfaces and reference implementations
+- **`INfcDeviceManager`**: Universal NFC interface for all POS devices
+- **`IPosNfcPlugin`**: Plugin interface for manufacturer-specific implementations
+- **`IGGWave`**: Audio-based data transmission interface
+- **`examples/`**: Sample implementations and integration examples
+
+## 🔌 Plugin Development
+
+### Creating a Custom POS Plugin
+
+Implement the `IPosNfcPlugin` interface for your POS hardware:
 
 ```java
-public class YourManufacturerPlugin implements IPosNfcPlugin {
+public class MyPosPlugin implements IPosNfcPlugin {
     
     @Override
     public void initialize(Context context) throws Exception {
-        // Initialize your manufacturer SDK
-        YourManufacturerSDK.init(context);
+        // Initialize your POS SDK
     }
     
     @Override
     public void startListening(INfcDeviceManager.NdefCallback callback) throws Exception {
-        // Start NFC listening using manufacturer SDK
-        YourManufacturerSDK.startNfc(callback);
+        // Start NFC detection using your hardware SDK
     }
     
     @Override
     public void stopListening() throws Exception {
-        // Stop NFC listening
-        YourManufacturerSDK.stopNfc();
-    }
-    
-    @Override
-    public boolean isListening() {
-        return YourManufacturerSDK.isNfcActive();
+        // Stop NFC detection and cleanup
     }
     
     @Override
     public String getPluginInfo() {
-        return "YourManufacturer Plugin v1.0";
+        return "My POS Plugin v1.0 - Supports XYZ POS devices";
     }
     
     @Override
     public String getSupportedDevices() {
-        return "PAX A920, A930, Neptune Lite";
+        return "Model A, Model B, Model C";
     }
     
-    @Override
-    public void cleanup() {
-        YourManufacturerSDK.cleanup();
-    }
+    // ... implement other required methods
 }
 ```
 
----
+## 📚 API Reference
 
-## 📱 Payment & Card Management
+### Core Interfaces
 
-### Payment Processing
+#### `INfcDeviceManager`
+- `startListening(NdefCallback callback)`: Start NFC listening
+- `stopListening()`: Stop NFC listening
 
-```java
-// Initialize payment interface
-IPayment paymentService = new YourPaymentImplementation();
+#### `IPosNfcPlugin`
+- `initialize(Context context)`: Initialize plugin
+- `startListening(NdefCallback callback)`: Start hardware-specific NFC detection
+- `stopListening()`: Stop NFC detection
+- `isListening()`: Check listening status
+- `getPluginInfo()`: Get plugin information
+- `getSupportedDevices()`: Get supported device list
+- `cleanup()`: Clean up resources
 
-// Create card object
-Card card = Card.builder()
-    .cardId("card_123")
-    .last4Digits("1234")
-    .network(Network.VISA)
-    .cardType(CardType.CREDIT)
-    .issuerBank(IssuerBank.HDFC)
-    .build();
-
-// Initiate payment
-PaymentInitiationResponse response = paymentService.initiatePayment(card, 100.0f);
-
-// Handle 3D Secure if required
-if (response.getAcsURL() != null) {
-    // Redirect to ACS URL for OTP verification
-    redirectTo3DSecure(response.getAcsURL());
-}
-
-// Confirm payment status
-PaymentStatus status = paymentService.confirmPayment(response.getPaymentId());
-```
-
-### Card Management
-
-```java
-// Initialize cards interface
-ICards cardsService = new YourCardsImplementation();
-
-// List saved cards for a merchant and contact
-List<ListSavedCards> savedCards = cardsService.listAllSavedCards(
-    "merchant_123", 
-    "customer_contact"
-);
-
-// Process saved cards
-for (ListSavedCards cardList : savedCards) {
-    Card[] cards = cardList.getCards();
-    for (Card card : cards) {
-        System.out.println("Card: " + card.getNetwork() + " ending in " + card.getLast4Digits());
-    }
-}
-```
-
----
-
-## 🏗️ Core Components
-
-### Interfaces
-
-| Interface | Purpose | Methods |
-|-----------|---------|---------|
-| `INfcDeviceManager` | NFC device operations | `startListening()`, `stopListening()` |
-| `IPosNfcPlugin` | Manufacturer plugin contract | `initialize()`, `startListening()`, `stopListening()`, `cleanup()` |
-| `IPayment` | Payment processing | `initiatePayment()`, `confirmPayment()` |
-| `ICards` | Card management | `listAllSavedCards()` |
+#### `IGGWave`
+- `initialize(Runnable readyCallback)`: Initialize GGWave
+- `send(String message, ...)`: Send text over audio
+- `sendMessage(GGWaveMessage message, ...)`: Send structured message
+- `startListening(GGWaveCallback callback)`: Listen for audio messages
+- `stopListening()`: Stop audio listening
+- `cleanup()`: Clean up audio resources
 
 ### Models
 
-| Model | Purpose | Key Fields |
-|-------|---------|------------|
-| `Card` | Payment card data | `cardId`, `last4Digits`, `network`, `cardType`, `issuerBank` |
-| `PaymentInitiationResponse` | Payment response | `acsURL`, `paymentId`, `orderId` |
-| `CardToken` | Card tokenization | `id`, `merchantId`, `createdAt` |
-| `ListSavedCards` | Saved cards container | `contact`, `cards[]` |
+#### `GGWaveMessage`
+```java
+// Create a DrishtiPay message
+GGWaveMessage message = new GGWaveMessage("9876543210");
 
-### Enums
+// Create custom message
+GGWaveMessage custom = new GGWaveMessage("9876543210", "my_app", "custom_type");
 
-| Enum | Values |
-|------|--------|
-| `Network` | `MASTERCARD`, `VISA`, `RUPAY`, `AMEX`, `DINERS` |
-| `CardType` | `CREDIT`, `DEBIT` |
-| `PaymentStatus` | `PAID`, `CREATED` |
-| `IssuerBank` | `HDFC`, `AXIS`, `ICICI`, `SBI` |
+// Parse from JSON
+GGWaveMessage parsed = GGWaveMessage.fromJson(jsonString);
+```
 
----
+## 💡 Examples
 
-## 🧪 Testing & Development
+The SDK includes comprehensive examples in the `examples/` directory:
 
-### Mock Mode
+### Available Examples
 
-Test without manufacturer hardware:
+1. **`SimplePosExample.java`**: Basic NFC payment processing
+2. **`GGWaveExample.java`**: Audio data transmission examples
+3. **`PaxNeptuneLitePlugin.java`**: PAX POS device integration
+4. **`AbstractPosPlugin.java`**: Universal demo plugin for presentations
+
+### Running Examples
+
+```bash
+# Build the example app
+cd example/drishtipay-drive-app
+./gradlew assembleDebug
+
+# Install and run
+adb install app/build/outputs/apk/debug/app-debug.apk
+```
+
+## 🎵 GGWave Integration
+
+This SDK integrates [GGWave](https://github.com/ggerganov/ggwave) for audio-based data transmission, enabling contactless data exchange through sound waves.
+
+### GGWave Features
+
+- **Ultrasound & Audible**: Support for both frequency ranges
+- **Fast & Normal Modes**: Balance between speed and reliability
+- **Cross-Platform**: Works with web, mobile, and desktop applications
+- **No Internet Required**: Pure audio-based communication
+
+### Attribution
+
+The GGWave functionality in this SDK is based on the excellent work by [Georgi Gerganov](https://github.com/ggerganov/ggwave). We've integrated and adapted the GGWave library to work seamlessly with Android POS systems.
+
+**Original GGWave Project**: https://github.com/ggerganov/ggwave
+
+### GGWave Usage Examples
 
 ```java
-// Use mock mode for development
-INfcDeviceManager nfcManager = new PosNfcDeviceManager(context);
+// Send payment request over ultrasound (more private)
+ggWave.send(paymentJson, true, false, callback);
 
-// Mock plugin simulates NFC taps after 3 seconds
-nfcManager.startListening(callback);
+// Send mobile number using DrishtiPay format
+ggWave.sendMobileNumber("9876543210");
+
+// Listen for structured DrishtiPay messages
+ggWave.startListening(callback);
 ```
+
+## 🔧 Build Requirements
+
+- **Android Studio**: Arctic Fox or later
+- **Java**: JDK 11 or later
+- **Android SDK**: API 23+ (minSdk), API 36 (target/compile)
+- **Gradle**: 7.0+
 
 ### Build Commands
 
 ```bash
-# Build the library
+# Build the core library
 ./gradlew :pos-sdk-core:assemble
 
-# Run tests
-./gradlew :pos-sdk-core:test
+# Build with all checks
+./gradlew :pos-sdk-core:assemble :pos-sdk-core:lint 
 
-# Run lint checks
-./gradlew :pos-sdk-core:lint
-
-# Build all
-./gradlew clean build
+# Generate AAR
+./gradlew :pos-sdk-core:assembleRelease
 ```
 
----
+## 🙏 Acknowledgments
 
-## 🔒 Security & Compliance
+- **[GGWave](https://github.com/ggerganov/ggwave)** by Georgi Gerganov - Audio data transmission library
 
-### Data Protection
-- ✅ **No PII Logging** - Card numbers and sensitive data are never logged
-- ✅ **PCI DSS Compliant** - Follows payment card industry standards
-- ✅ **Secure Tokenization** - Card data is tokenized, not stored
-- ✅ **Input Validation** - All NFC payloads are validated and sanitized
+## 📞 Support
 
-### Best Practices
-- ✅ **Thread Safety** - All callbacks are thread-safe
-- ✅ **Resource Management** - Automatic cleanup of NFC resources
-- ✅ **Error Handling** - Comprehensive error handling with actionable messages
-- ✅ **ProGuard Ready** - Obfuscation rules included
+- **Issues**: [GitHub Issues](https://github.com/freedom-finance-stack/drishtipay-pos-sdk/issues)
+- **Email**: [support@freedomfinancestack.com](mailto:support@freedomfinancestack.com)
 
 ---
 
-## 📋 Requirements
+**Made with ❤️ by the Freedom Finance Stack Team**
 
-| Requirement | Version/Details |
-|------------|-----------------|
-| **Platform** | Android API 23+ (Android 6.0) |
-| **Java** | Java 11+ |
-| **Build Tool** | Gradle 8.11.1+ |
-| **Hardware** | NFC-enabled POS device |
-| **Permissions** | `android.permission.NFC` |
-
----
-
-## 🏭 Supported Manufacturers
-
-| Manufacturer | Models | Plugin Required |
-|--------------|--------|-----------------|
-| **PAX** | A920, A930, Neptune Lite | ✅ |
-| **Ingenico** | iCT220, iCT250, Move/5000 | ✅ |
-| **Verifone** | VX820, VX690, VX675 | ✅ |
-| **Custom** | Any manufacturer | ✅ |
-| **Mock** | Testing/Development | ❌ (Built-in) |
-
----
-
-## 📚 Documentation
-
-- 📖 **[How to Use Guide](md_files/HOW_TO_USE.md)** - Detailed usage instructions
-- 🔧 **[API Reference](docs/api/)** - Complete API documentation
-- 🏗️ **[Plugin Development](docs/plugins/)** - Creating manufacturer plugins
-- 🧪 **[Testing Guide](docs/testing/)** - Testing strategies and examples
-
----
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
-
-### Development Setup
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/freedom-finance-stack/drishtipay-pos-sdk.git
-   cd drishtipay-pos-sdk
-   ```
-
-2. **Build the project**
-   ```bash
-   ./gradlew clean build
-   ```
-
-3. **Run tests**
-   ```bash
-   ./gradlew test
-   ```
-
-### Code Quality Standards
-
-- ✅ **Java 11** compatibility
-- ✅ **Android Lint** compliance
-- ✅ **Unit tests** for core functionality
-- ✅ **Javadoc** for public APIs
-- ✅ **ProGuard** rules for consumer apps
-
----
-
-## 📦 Publishing
-
-To publish to Maven Central:
-
-```gradle
-// build.gradle
-publishing {
-    publications {
-        maven(MavenPublication) {
-            groupId = 'com.freedomfinancestack'
-            artifactId = 'pos-sdk-core'
-            version = '1.0.0'
-            
-            from components.java
-        }
-    }
-}
-```
-
-```bash
-./gradlew publishToMavenCentral
-```
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 🆘 Support
-
-- 📧 **Email**: support@freedomfinancestack.com
-- 🐛 **Issues**: [GitHub Issues](https://github.com/freedom-finance-stack/drishtipay-pos-sdk/issues)
-- 📖 **Documentation**: [Wiki](https://github.com/freedom-finance-stack/drishtipay-pos-sdk/wiki)
-- 💬 **Discussions**: [GitHub Discussions](https://github.com/freedom-finance-stack/drishtipay-pos-sdk/discussions)
-
----
-
-## 🚀 Roadmap
-
-- [ ] **Bluetooth Support** - Bluetooth payment device integration
-- [ ] **QR Code Payments** - UPI QR code support
-- [ ] **EMV Chip Support** - Chip card processing
-- [ ] **Receipt Generation** - Digital and print receipt support
-- [ ] **Multi-Currency** - International payment support
-- [ ] **Analytics Dashboard** - Payment analytics and reporting
-
----
-
-**Built with ❤️ by the Freedom Finance Stack team**
-
-*Making POS payments simple, secure, and universal.*
+*Building the future of financial technology, one API at a time.*
