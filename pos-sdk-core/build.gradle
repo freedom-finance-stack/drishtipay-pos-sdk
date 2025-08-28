@@ -30,6 +30,10 @@ dependencies {
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core
 
+    // AndroidX dependencies for GGWave functionality
+    implementation 'androidx.annotation:annotation:1.7.1'
+    implementation 'androidx.webkit:webkit:1.8.0'
+    
     // Lombok
     compileOnly 'org.projectlombok:lombok:1.18.30'
     annotationProcessor 'org.projectlombok:lombok:1.18.30'

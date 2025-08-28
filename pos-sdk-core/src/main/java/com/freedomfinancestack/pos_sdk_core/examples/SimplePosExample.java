@@ -6,16 +6,24 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+
+import com.freedomfinancestack.pos_sdk_core.implementations.GGWaveImpl;
 import com.freedomfinancestack.pos_sdk_core.implementations.PosNfcDeviceManager;
+import com.freedomfinancestack.pos_sdk_core.interfaces.IGGWave;
 import com.freedomfinancestack.pos_sdk_core.interfaces.INfcDeviceManager;
 import com.freedomfinancestack.pos_sdk_core.interfaces.IPosNfcPlugin;
+import com.freedomfinancestack.pos_sdk_core.models.GGWaveMessage;
 
 /**
- * Simple example showing how to use Universal POS NFC for payments.
+ * Simple example showing how to use Universal POS SDK features:
+ * 1. NFC for tap-to-pay transactions
+ * 2. GGWave for audio-based data transmission
  * 
- * Shows two approaches:
- * 1. Mock mode (for testing without manufacturer SDK)
- * 2. Plugin mode (for production with manufacturer SDK)
+ * Shows multiple approaches:
+ * - Mock mode (for testing without manufacturer SDK)
+ * - Plugin mode (for production with manufacturer SDK)
+ * - GGWave integration for contactless audio communication
  * 
  * Works with ANY POS manufacturer: PAX, Ingenico, Verifone, etc.
  */
@@ -24,18 +32,22 @@ public class SimplePosExample extends Activity {
     private static final String TAG = "SimplePosExample";
     
     private INfcDeviceManager nfcManager;
+    private IGGWave ggWave;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
-        // Choose approach based on your setup:
+        // Initialize both NFC and GGWave functionality
         
         // APPROACH 1: Mock mode (for testing without manufacturer SDK)
         setupMockMode();
         
         // APPROACH 2: Plugin mode (for production with manufacturer SDK)
         // setupPluginMode();
+        
+        // Initialize GGWave functionality
+        setupGGWave();
         
         // Start payment session
         startPayment();
@@ -77,6 +89,131 @@ public class SimplePosExample extends Activity {
         nfcManager = new PosNfcDeviceManager(this);
         
         showMessage("Plugin mode setup complete. Replace with real plugin for production.");
+    }
+    
+    /**
+     * Initialize GGWave functionality for audio-based communication
+     */
+    private void setupGGWave() {
+        Log.d(TAG, "Setting up GGWave audio communication...");
+        
+        // Create GGWave instance with auto volume adjustment
+        ggWave = new GGWaveImpl(this, true);
+        
+        // Initialize GGWave
+        ggWave.initialize(() -> {
+            Log.d(TAG, "GGWave initialized and ready");
+            showMessage("Audio communication ready");
+            
+            // Start listening for audio messages
+            startGGWaveListening();
+        });
+    }
+    
+    /**
+     * Start listening for GGWave audio messages
+     */
+    private void startGGWaveListening() {
+        if (ggWave == null || !ggWave.isInitialized()) {
+            Log.w(TAG, "GGWave not ready for listening");
+            return;
+        }
+        
+        ggWave.startListening(new IGGWave.GGWaveCallback() {
+            @Override
+            public boolean onMessageReceived(@NonNull GGWaveMessage message) {
+                Log.d(TAG, "Received DrishtiPay audio message");
+                
+                // Process structured DrishtiPay message  
+                showMessage("DrishtiPay message received: " + message.getMobileNumber());
+                
+                // Continue listening for more messages
+                return true;
+            }
+            
+            @Override
+            public boolean onRawMessageReceived(@NonNull String rawMessage) {
+                Log.d(TAG, "Received raw audio message");
+                
+                // Process raw audio message
+                processAudioMessage(rawMessage);
+                
+                // Continue listening for more messages
+                return true;
+            }
+            
+            @Override
+            public void onError(@NonNull String error) {
+                Log.e(TAG, "GGWave reception error: " + error);
+                showMessage("Audio reception error: " + error);
+            }
+        });
+        
+        Log.d(TAG, "Started listening for audio messages");
+    }
+    
+    /**
+     * Process messages received via audio (GGWave)
+     */
+    private void processAudioMessage(@NonNull String message) {
+        try {
+            Log.d(TAG, "Processing audio message");
+            
+            // Check if it's a payment-related message
+            if (message.toLowerCase().contains("payment") || message.startsWith("{")) {
+                showMessage("Payment data received via audio");
+                
+                // Process as payment data
+                processAudioPayment(message);
+            } else {
+                showMessage("General message received via audio: " + message);
+                
+                // Echo the message back
+                sendAudioResponse("ACK: " + message);
+            }
+            
+        } catch (Exception e) {
+            Log.e(TAG, "Error processing audio message", e);
+            showMessage("Error processing audio message: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Process payment data received via audio
+     */
+    private void processAudioPayment(@NonNull String paymentData) {
+        Log.d(TAG, "Processing payment from audio");
+        
+        // TODO: Parse and validate payment data
+        // Example: JSON parsing, amount validation, etc.
+        
+        // Simulate payment processing
+        showMessage("Audio payment processed successfully");
+        
+        // Send confirmation back via audio
+        sendAudioResponse("PAYMENT_CONFIRMED");
+    }
+    
+    /**
+     * Send a response message via audio
+     */
+    private void sendAudioResponse(@NonNull String response) {
+        if (ggWave == null || !ggWave.isInitialized()) {
+            Log.w(TAG, "GGWave not ready for sending");
+            return;
+        }
+        
+        ggWave.send(response, false, true, new IGGWave.GGWaveTransmissionCallback() {
+            @Override
+            public void onTransmissionComplete() {
+                Log.d(TAG, "Audio response sent successfully");
+            }
+            
+            @Override
+            public void onTransmissionError(@NonNull String error) {
+                Log.e(TAG, "Failed to send audio response: " + error);
+            }
+        });
     }
     
     private void startPayment() {
@@ -149,5 +286,12 @@ public class SimplePosExample extends Activity {
                 ((PosNfcDeviceManager) nfcManager).cleanup();
             }
         }
+        
+        // Clean up GGWave resources
+        if (ggWave != null) {
+            ggWave.cleanup();
+        }
+        
+        Log.d(TAG, "All resources cleaned up");
     }
 } 

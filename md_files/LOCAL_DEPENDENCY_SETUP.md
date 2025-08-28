@@ -12,7 +12,7 @@ This document provides a complete step-by-step guide for importing the private D
 
 📁 **Local Repository Available**: A local copy of the DrishtiPay POS SDK repository is already available at:
 ```
-/Users/varun.bansal/AndroidStudioProjects/drishtipay-pos-sdk
+/Users/user/AndroidStudioProjects/drishtipay-pos-sdk
 ```
 This guide will use this existing local copy for building the AAR.
 
@@ -66,7 +66,7 @@ If you already have a local copy of the repository:
 
 ```bash
 # Navigate to the existing repository
-cd /Users/varun.bansal/AndroidStudioProjects/drishtipay-pos-sdk
+cd /Users/user/AndroidStudioProjects/drishtipay-pos-sdk
 
 # Ensure you're on master branch and pull latest changes
 git checkout master
@@ -89,7 +89,7 @@ git checkout master
 
 ```bash
 # If not already in the repository directory
-cd /Users/varun.bansal/AndroidStudioProjects/drishtipay-pos-sdk
+cd /Users/user/AndroidStudioProjects/drishtipay-pos-sdk
 
 # Copy local.properties from your main project (or create manually)
 # Replace YOUR_PROJECT_NAME with your actual project name
@@ -103,7 +103,7 @@ echo "sdk.dir=/Users/$(whoami)/Library/Android/sdk" > local.properties
 
 ```bash
 # Ensure you're in the correct directory and on master branch
-cd /Users/varun.bansal/AndroidStudioProjects/drishtipay-pos-sdk
+cd /Users/user/AndroidStudioProjects/drishtipay-pos-sdk
 git checkout master
 
 # Clean previous builds and build the release AAR file
@@ -124,7 +124,7 @@ cd ../YOUR_PROJECT_NAME
 mkdir -p app/libs
 
 # Copy the AAR file with a versioned name from the existing local repository
-cp /Users/varun.bansal/AndroidStudioProjects/drishtipay-pos-sdk/pos-sdk-core/build/outputs/aar/pos-sdk-core-release.aar app/libs/drishtipay-pos-sdk-0.0.1.aar
+cp /Users/user/AndroidStudioProjects/drishtipay-pos-sdk/pos-sdk-core/build/outputs/aar/pos-sdk-core-release.aar app/libs/drishtipay-pos-sdk-0.0.1.aar
 
 # Verify the file was copied
 ls -la app/libs/drishtipay-pos-sdk-0.0.1.aar
@@ -261,7 +261,7 @@ When a new version of the SDK is released:
 
 1. Pull latest changes in the existing local repository:
 ```bash
-cd /Users/varun.bansal/AndroidStudioProjects/drishtipay-pos-sdk
+cd /Users/user/AndroidStudioProjects/drishtipay-pos-sdk
 git checkout master
 git pull origin master
 ```
@@ -273,7 +273,7 @@ git pull origin master
 
 3. Copy the new AAR to your project:
 ```bash
-cp /Users/varun.bansal/AndroidStudioProjects/drishtipay-pos-sdk/pos-sdk-core/build/outputs/aar/pos-sdk-core-release.aar ../YOUR_PROJECT_NAME/app/libs/drishtipay-pos-sdk-NEW_VERSION.aar
+cp /Users/user/AndroidStudioProjects/drishtipay-pos-sdk/pos-sdk-core/build/outputs/aar/pos-sdk-core-release.aar ../YOUR_PROJECT_NAME/app/libs/drishtipay-pos-sdk-NEW_VERSION.aar
 ```
 
 4. Update the dependency in `app/build.gradle`:
