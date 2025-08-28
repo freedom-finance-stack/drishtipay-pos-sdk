@@ -54,9 +54,9 @@ class MainActivity : ComponentActivity() {
     private var ggWaveLogMessages = mutableStateOf(listOf<String>())
 
     // Cards state for GGWave triggered updates
-    private var varunCardsState = mutableStateOf(listOf<Card>())
-    private var varunShowCardsState = mutableStateOf(false)
-    private var varunForceRefresh = mutableStateOf(0)
+    private var CardsState = mutableStateOf(listOf<Card>())
+    private var ShowCardsState = mutableStateOf(false)
+    private var ForceRefresh = mutableStateOf(0)
 
     // These will be managed inside Composable
     @Volatile
@@ -160,10 +160,10 @@ class MainActivity : ComponentActivity() {
                 }
 
                 // GGWave Triggered Cards Section (only show when triggered by GGWave)
-                if (varunShowCardsState.value) {
+                if (ShowCardsState.value) {
                     Log.d(
-                        "VarunDebug",
-                        "SHOWING GGWave Triggered Cards with ${varunCardsState.value.size} cards!"
+                        "Debug",
+                        "SHOWING GGWave Triggered Cards with ${CardsState.value.size} cards!"
                     )
 
                     Card(
@@ -196,10 +196,10 @@ class MainActivity : ComponentActivity() {
                         }
                     }
 
-                    SavedCardsSection(varunCardsState.value) { card ->
-                        Log.d("VarunDebug", "GGWave triggered card clicked: ${card.last4Digits}")
+                    SavedCardsSection(CardsState.value) { card ->
+                        Log.d("Debug", "GGWave triggered card clicked: ${card.last4Digits}")
                         initiatePaymentForCard(card) { response ->
-                            Log.d("VarunDebug", "GGWave payment response received")
+                            Log.d("Debug", "GGWave payment response received")
                             paymentResponseState = response
                         }
                     }
@@ -1210,19 +1210,19 @@ class MainActivity : ComponentActivity() {
                             Toast.makeText(this@MainActivity, "DrishtiPay message received!", Toast.LENGTH_SHORT).show()
 
                             // Call requested function after receiving message
-                            Log.d("VarunDebug", "Start button CLICKED!")
+                            Log.d("Debug", "Start button CLICKED!")
                             narrator.speak("NFC Simulation / Mobile Tapped")
 
-                            // Trigger the Varun test functionality
-                            startVarunTest { newCards, showCards ->
-                                Log.d("VarunDebug", "GGWave triggered cards callback: ${newCards.size} cards, show = $showCards")
+                            // Trigger the  test functionality
+                            startTransaction() { newCards, showCards ->
+                                Log.d("Debug", "GGWave triggered cards callback: ${newCards.size} cards, show = $showCards")
 
                                 // Update class-level state variables that can be accessed by Composables
-                                varunCardsState.value = newCards
-                                varunShowCardsState.value = showCards
-                                varunForceRefresh.value = varunForceRefresh.value + 1
+                                CardsState.value = newCards
+                                ShowCardsState.value = showCards
+                                ForceRefresh.value = ForceRefresh.value + 1
 
-                                Log.d("VarunDebug", "Cards state updated: ${varunCardsState.value.size} cards, show = ${varunShowCardsState.value}")
+                                Log.d("Debug", "Cards state updated: ${CardsState.value.size} cards, show = ${ShowCardsState.value}")
                             }
                         }
                         return true // Continue listening
