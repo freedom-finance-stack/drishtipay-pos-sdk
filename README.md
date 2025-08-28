@@ -18,14 +18,16 @@ A comprehensive, plugin-based Android SDK for Point of Sale (POS) systems that p
 
 ## 📋 Table of Contents
 
-- [Installation](#installation)
-- [Quick Start](#quick-start)
-- [Architecture](#architecture)
-- [API Reference](#api-reference)
-- [Examples](#examples)
-- [GGWave Integration](#ggwave-integration)
-
-- [License](#license)
+- [Installation](#-installation)
+- [Quick Start](#-quick-start)
+- [Architecture](#-architecture)
+- [API Reference](#-api-reference)
+- [Examples](#-examples)
+- [GGWave Integration](#-ggwave-integration)
+- [Build Requirements](#-build-requirements)
+- [License](#-license)
+- [Acknowledgments](#-acknowledgments)
+- [Support](#-support)
 
 ## 🛠 Installation
 
@@ -293,6 +295,7 @@ ggWave.sendMobileNumber("9876543210");
 // Listen for structured DrishtiPay messages
 ggWave.startListening(callback);
 ```
+
 
 ## 🔧 Build Requirements
 
