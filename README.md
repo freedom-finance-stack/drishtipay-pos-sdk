@@ -321,6 +321,9 @@ ggWave.startListening(callback);
 
 - **[GGWave](https://github.com/ggerganov/ggwave)** by Georgi Gerganov - Audio data transmission library
 
+## How to contribute to the project
+For contribution guidelines, see [CONTRIBUTING](contributing.md).
+
 ## 📞 Support
 
 - **Issues**: [GitHub Issues](https://github.com/freedom-finance-stack/drishtipay-pos-sdk/issues)
