@@ -4,7 +4,16 @@
 [![Android API](https://img.shields.io/badge/API-23%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=23)
 [![Java Version](https://img.shields.io/badge/Java-11-blue.svg)](https://www.oracle.com/java/technologies/javase-jdk11-downloads.html)
 
-A comprehensive, plugin-based Android SDK for Point of Sale (POS) systems that provides unified NFC payment processing and audio-based data transmission capabilities. Built with a modular architecture that supports multiple POS hardware manufacturers through a clean plugin interface.
+
+## 🚀 What is DrishtiPay 
+
+DrishtiPay is an **open standard that transforms traditional offline card payments into secure online experiences** by establishing communication channels between smartphones and POS terminals. Instead of physical cards and vulnerable PIN entries, customers tap their phones to identify themselves and authenticate transactions using OTPs on their trusted devices. This eliminates critical security risks, especially for visually impaired users who must verbally share PINs with merchants.
+
+The protocol implements **dual-channel data transmission** supporting both **NFC and GGWave audio-based transfer**. While NFC enables rapid handshakes with modern terminals, our integrated audio transmission system transmits encrypted payment data through sound waves, ensuring compatibility even with legacy POS systems. This redundant architecture bridges offline merchant infrastructure with online payment security, maintaining end-to-end encryption throughout the transaction flow.
+
+As an open-source initiative, DrishtiPay democratizes this offline-to-online transformation by publishing comprehensive interface specifications for ecosystem-wide adoption by financial institutions and payment processors. This standards-based approach particularly empowers visually impaired users to conduct autonomous transactions using familiar assistive technologies, restoring privacy and security while fostering financial inclusion at scale.
+
+This SDK provides the technical foundation for implementing DrishtiPay's open standard, offering developers a comprehensive, plugin-based Android library for POS systems with unified NFC payment processing and audio-based data transmission capabilities. Built with a modular architecture that supports multiple POS through a clean plugin interface.
 
 ## 🚀 Features
 
