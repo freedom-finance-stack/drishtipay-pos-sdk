@@ -1,5 +1,115 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- POS Terminal Theme -->
+    <style name="Theme.Razorpaydrishtipaytest" parent="android:Theme.Material.NoActionBar">
+        <!-- Background colors -->
+        <item name="android:windowBackground">@color/pos_background</item>
+        <item name="android:colorBackground">@color/pos_background</item>
+        
+        <!-- Status bar -->
+        <item name="android:statusBarColor">@color/pos_background</item>
+        <item name="android:windowLightStatusBar">false</item>
+        
+        <!-- Navigation bar -->
+        <item name="android:navigationBarColor">@color/pos_background</item>
+        
+        <!-- Text colors -->
+        <item name="android:textColorPrimary">@color/pos_text_primary</item>
+        <item name="android:textColorSecondary">@color/pos_text_secondary</item>
+        
+        <!-- Primary colors for Material components -->
+        <item name="android:colorPrimary">@color/pos_primary</item>
+        <item name="android:colorAccent">@color/pos_accent</item>
+    </style>
 
-    <style name="Theme.Razorpaydrishtipaytest" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- POS Button Styles -->
+    <style name="POSButton" parent="android:Widget.Material.Button">
+        <item name="android:layout_height">56dp</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/pos_text_primary</item>
+        <item name="android:background">@drawable/pos_button_background</item>
+        <item name="android:elevation">4dp</item>
+        <item name="android:layout_margin">8dp</item>
+    </style>
+
+    <style name="POSButton.Primary">
+        <item name="android:backgroundTint">@color/pos_button_primary</item>
+    </style>
+
+    <style name="POSButton.Success">
+        <item name="android:backgroundTint">@color/pos_button_success</item>
+    </style>
+
+    <style name="POSButton.Secondary">
+        <item name="android:backgroundTint">@color/pos_button_secondary</item>
+    </style>
+
+    <style name="POSButton.Danger">
+        <item name="android:backgroundTint">@color/pos_button_danger</item>
+    </style>
+
+    <!-- POS Card Style -->
+    <style name="POSCard">
+        <item name="android:background">@drawable/pos_card_background</item>
+        <item name="android:elevation">6dp</item>
+        <item name="android:layout_margin">12dp</item>
+        <item name="android:padding">16dp</item>
+    </style>
+
+    <!-- POS Text Styles -->
+    <style name="POSText">
+        <item name="android:textColor">@color/pos_text_primary</item>
+    </style>
+
+    <style name="POSText.Title">
+        <item name="android:textSize">24sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/pos_text_primary</item>
+    </style>
+
+    <style name="POSText.Subtitle">
+        <item name="android:textSize">18sp</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:textColor">@color/pos_text_secondary</item>
+    </style>
+
+    <style name="POSText.Body">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/pos_text_primary</item>
+    </style>
+
+    <style name="POSText.Caption">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/pos_text_muted</item>
+    </style>
+
+    <!-- Status Indicator Styles -->
+    <style name="POSStatus">
+        <item name="android:padding">8dp</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:gravity">center</item>
+        <item name="android:background">@drawable/pos_status_background</item>
+    </style>
+
+    <style name="POSStatus.Success">
+        <item name="android:backgroundTint">@color/pos_success</item>
+        <item name="android:textColor">@color/white</item>
+    </style>
+
+    <style name="POSStatus.Warning">
+        <item name="android:backgroundTint">@color/pos_warning</item>
+        <item name="android:textColor">@color/white</item>
+    </style>
+
+    <style name="POSStatus.Error">
+        <item name="android:backgroundTint">@color/pos_error</item>
+        <item name="android:textColor">@color/white</item>
+    </style>
+
+    <style name="POSStatus.Info">
+        <item name="android:backgroundTint">@color/pos_info</item>
+        <item name="android:textColor">@color/white</item>
+    </style>
 </resources>

@@ -1,5 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- POS Machine Color Scheme -->
+    <!-- Primary Colors -->
+    <color name="pos_primary">#1E3A8A</color>        <!-- Deep Blue -->
+    <color name="pos_primary_dark">#1E40AF</color>   <!-- Darker Blue -->
+    <color name="pos_accent">#10B981</color>         <!-- Success Green -->
+    <color name="pos_accent_light">#34D399</color>   <!-- Light Green -->
+    
+    <!-- Background Colors -->
+    <color name="pos_background">#0F172A</color>     <!-- Dark Navy Background -->
+    <color name="pos_surface">#1E293B</color>       <!-- Card/Surface Background -->
+    <color name="pos_surface_light">#334155</color> <!-- Light Surface -->
+    
+    <!-- Text Colors -->
+    <color name="pos_text_primary">#F8FAFC</color>   <!-- Primary White Text -->
+    <color name="pos_text_secondary">#CBD5E1</color> <!-- Secondary Gray Text -->
+    <color name="pos_text_muted">#94A3B8</color>    <!-- Muted Text -->
+    
+    <!-- Status Colors -->
+    <color name="pos_success">#10B981</color>        <!-- Success Green -->
+    <color name="pos_warning">#F59E0B</color>        <!-- Warning Orange -->
+    <color name="pos_error">#EF4444</color>          <!-- Error Red -->
+    <color name="pos_info">#3B82F6</color>           <!-- Info Blue -->
+    
+    <!-- Button Colors -->
+    <color name="pos_button_primary">#2563EB</color>     <!-- Primary Button -->
+    <color name="pos_button_secondary">#475569</color>   <!-- Secondary Button -->
+    <color name="pos_button_success">#059669</color>     <!-- Success Button -->
+    <color name="pos_button_danger">#DC2626</color>      <!-- Danger Button -->
+    
+    <!-- Legacy Colors (keeping for compatibility) -->
     <color name="purple_200">#FFBB86FC</color>
     <color name="purple_500">#FF6200EE</color>
     <color name="purple_700">#FF3700B3</color>

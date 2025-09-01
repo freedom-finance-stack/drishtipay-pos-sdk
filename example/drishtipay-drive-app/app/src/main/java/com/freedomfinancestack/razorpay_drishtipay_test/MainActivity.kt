@@ -17,6 +17,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -150,19 +152,58 @@ class MainActivity : ComponentActivity() {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             topBar = {
-                TopAppBar(
-                    title = {
-                        Text(
-                            text = "DrishtiPay POS SDK",
-                            fontWeight = FontWeight.SemiBold
+                // POS Terminal Header
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(80.dp)
+                        .background(
+                            brush = androidx.compose.ui.graphics.Brush.verticalGradient(
+                                colors = listOf(
+                                    androidx.compose.ui.graphics.Color(0xFF1E3A8A),
+                                    androidx.compose.ui.graphics.Color(0xFF1E40AF)
+                                )
+                            )
                         )
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        titleContentColor = MaterialTheme.colorScheme.onSurface
-                    ),
-                    windowInsets = TopAppBarDefaults.windowInsets
-                )
+                        .padding(horizontal = 20.dp, vertical = 12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxSize(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = "DrishtiPay POS",
+                                fontSize = 22.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = androidx.compose.ui.graphics.Color.White
+                            )
+                            Text(
+                                text = "Terminal ID: DPT-001",
+                                fontSize = 12.sp,
+                                color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.8f)
+                            )
+                        }
+                        
+                        // Status Indicator
+                        Box(
+                            modifier = Modifier
+                                .background(
+                                    androidx.compose.ui.graphics.Color(0xFF10B981),
+                                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+                                )
+                                .padding(horizontal = 12.dp, vertical = 6.dp)
+                        ) {
+                            Text(
+                                text = "READY",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = androidx.compose.ui.graphics.Color.White
+                            )
+                        }
+                    }
+                }
             }
         ) { innerPadding ->
             Column(
@@ -314,61 +355,143 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     fun TestSection(onCardsLoaded: (List<Card>, Boolean) -> Unit) {
+        // Main Payment Terminal Card
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant
+                containerColor = androidx.compose.ui.graphics.Color(0xFF1E293B)
             ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
         ) {
             Column(
-                modifier = Modifier.padding(20.dp)
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // Terminal Status
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "PAYMENT TERMINAL",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = androidx.compose.ui.graphics.Color(0xFFF8FAFC)
+                    )
+                    
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                androidx.compose.ui.graphics.Color(0xFF10B981),
+                                shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
+                            )
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = "ONLINE",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = androidx.compose.ui.graphics.Color.White
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // Amount Display (POS Style)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            androidx.compose.ui.graphics.Color(0xFF0F172A),
+                            shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+                        )
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "AMOUNT",
+                            fontSize = 12.sp,
+                            color = androidx.compose.ui.graphics.Color(0xFF94A3B8)
+                        )
+                        Text(
+                            text = "₹10.00",
+                            fontSize = 32.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = androidx.compose.ui.graphics.Color(0xFF10B981)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // Instructions
                 Text(
-                    text = "Payment Simulation",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = "Load saved cards and simulate payment flow",
-                    fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    text = "Tap Card or Phone to Pay",
+                    fontSize = 16.sp,
+                    color = androidx.compose.ui.graphics.Color(0xFFCBD5E1),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
+                // Start Payment Button (POS Style)
                 Button(
                     onClick = {
                         Log.d("Debug", "Start button CLICKED!")
                         narrator.speak("Starting Simulation, Initiating the transaction of 10 Rupees")
                         startTransaction(onCardsLoaded)
                     },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary
+                        containerColor = androidx.compose.ui.graphics.Color(0xFF2563EB)
                     ),
-                    shape = MaterialTheme.shapes.medium
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
                 ) {
                     Text(
-                        text = "Start Simulation",
+                        text = "START PAYMENT SIMULATION",
                         fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium,
-                        modifier = Modifier.padding(vertical = 4.dp)
+                        fontWeight = FontWeight.Bold,
+                        color = androidx.compose.ui.graphics.Color.White
                     )
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-                Text(
-                    text = "• Load saved payment cards\n• Display cards for selection\n• Process payment on card selection",
-                    fontSize = 13.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    lineHeight = 18.sp
-                )
+                // Payment Methods Accepted
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    PaymentMethodChip("💳 Cards")
+                    PaymentMethodChip("📱 NFC")
+                    PaymentMethodChip("🎵 Audio")
+                }
             }
+        }
+    }
+
+    @Composable
+    fun PaymentMethodChip(text: String) {
+        Box(
+            modifier = Modifier
+                .background(
+                    androidx.compose.ui.graphics.Color(0xFF334155),
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
+                )
+                .padding(horizontal = 12.dp, vertical = 6.dp)
+        ) {
+            Text(
+                text = text,
+                fontSize = 12.sp,
+                color = androidx.compose.ui.graphics.Color(0xFFCBD5E1)
+            )
         }
     }
 
@@ -598,14 +721,14 @@ class MainActivity : ComponentActivity() {
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface
+                containerColor = androidx.compose.ui.graphics.Color(0xFF1E293B)
             ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
         ) {
             Column(
-                modifier = Modifier.padding(20.dp)
+                modifier = Modifier.padding(24.dp)
             ) {
-                // Professional header
+                // POS-style header
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -613,60 +736,97 @@ class MainActivity : ComponentActivity() {
                 ) {
                     Column {
                         Text(
-                            text = "Saved Payment Cards",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            text = "CUSTOMER PAYMENT CARDS",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = androidx.compose.ui.graphics.Color(0xFFF8FAFC)
                         )
                         Text(
                             text = "${cards.size} cards available",
-                            fontSize = 14.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            fontSize = 12.sp,
+                            color = androidx.compose.ui.graphics.Color(0xFF94A3B8)
+                        )
+                    }
+                    
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                androidx.compose.ui.graphics.Color(0xFF3B82F6),
+                                shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
+                            )
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = "SELECT CARD",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = androidx.compose.ui.graphics.Color.White
                         )
                     }
                 }
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                // Professional card list
+                // POS-style card list
                 cards.forEachIndexed { index, card ->
                     Log.d("Debug", "Creating UI for card $index: ****${card.last4Digits}")
 
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 4.dp),
+                            .padding(vertical = 6.dp),
                         colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant
+                            containerColor = androidx.compose.ui.graphics.Color(0xFF334155)
                         ),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                     ) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(16.dp),
+                                .padding(20.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column(
-                                modifier = Modifier.weight(1f)
+                            Row(
+                                modifier = Modifier.weight(1f),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(
-                                    text = card.issuerBank.toString(),
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                Text(
-                                    text = "•••• •••• •••• ${card.last4Digits}",
-                                    fontSize = 14.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                Text(
-                                    text = "${card.network} ${card.cardType}",
-                                    fontSize = 12.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                                // Card Type Icon
+                                Box(
+                                    modifier = Modifier
+                                        .size(48.dp)
+                                        .background(
+                                            androidx.compose.ui.graphics.Color(0xFF1E293B),
+                                            shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
+                                        ),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "💳",
+                                        fontSize = 20.sp
+                                    )
+                                }
+                                
+                                Spacer(modifier = Modifier.width(16.dp))
+                                
+                                Column {
+                                    Text(
+                                        text = card.issuerBank.toString(),
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = androidx.compose.ui.graphics.Color(0xFFF8FAFC)
+                                    )
+                                    Text(
+                                        text = "•••• •••• •••• ${card.last4Digits}",
+                                        fontSize = 14.sp,
+                                        color = androidx.compose.ui.graphics.Color(0xFFCBD5E1)
+                                    )
+                                    Text(
+                                        text = "${card.network} ${card.cardType}",
+                                        fontSize = 12.sp,
+                                        color = androidx.compose.ui.graphics.Color(0xFF94A3B8)
+                                    )
+                                }
                             }
 
                             Button(
@@ -674,14 +834,20 @@ class MainActivity : ComponentActivity() {
                                     Log.d("Debug", "Card clicked: ****${card.last4Digits}")
                                     onCardClick(card)
                                 },
+                                modifier = Modifier
+                                    .height(48.dp)
+                                    .width(100.dp),
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.primary
+                                    containerColor = androidx.compose.ui.graphics.Color(0xFF059669)
                                 ),
-                                shape = MaterialTheme.shapes.medium
+                                shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
                             ) {
                                 Text(
-                                    text = "Pay ₹10",
-                                    fontWeight = FontWeight.Medium
+                                    text = "PAY\n₹10",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = androidx.compose.ui.graphics.Color.White,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
                                 )
                             }
                         }
@@ -692,25 +858,27 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
-                // Professional hide button
+                // POS-style hide button
                 Button(
                     onClick = {
                         Log.d("Debug", "Hide Cards clicked")
                         showSavedCards = false
                         savedCardsList = emptyList()
                     },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.outline
+                        containerColor = androidx.compose.ui.graphics.Color(0xFF475569)
                     ),
-                    shape = MaterialTheme.shapes.medium
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
                 ) {
                     Text(
-                        text = "Hide Cards",
-                        fontWeight = FontWeight.Medium,
-                        modifier = Modifier.padding(vertical = 4.dp)
+                        text = "HIDE CARDS",
+                        fontWeight = FontWeight.Bold,
+                        color = androidx.compose.ui.graphics.Color.White
                     )
                 }
             }
