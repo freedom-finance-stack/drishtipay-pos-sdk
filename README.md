@@ -15,6 +15,10 @@ As an open-source initiative, DrishtiPay democratizes this offline-to-online tra
 
 This SDK provides the technical foundation for implementing DrishtiPay's open standard, offering developers a comprehensive, plugin-based Android library for POS systems with unified NFC payment processing and audio-based data transmission capabilities. Built with a modular architecture that supports multiple POS through a clean plugin interface.
 
+
+## Example
+https://github.com/user-attachments/assets/7567b3ff-419a-44c8-acfc-b420cef9d3c2
+
 ## 🚀 Features
 
 ### Core Capabilities
