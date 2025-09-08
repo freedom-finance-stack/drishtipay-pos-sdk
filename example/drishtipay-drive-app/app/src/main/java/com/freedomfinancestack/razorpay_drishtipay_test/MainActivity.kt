@@ -132,7 +132,7 @@ class MainActivity : ComponentActivity() {
                 } else {
                     // Permission denied, initialize SDK without GGWave functionality
                     addLog("⚠️ Audio permission denied - GGWave will not work")
-                    Toast.makeText(this, "Audio permission required for GGWave functionality", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this, "Audio permission required for Audio transfer functionality", Toast.LENGTH_LONG).show()
                     initializeDrishtiPaySDKWithoutGGWave()
                 }
             }
@@ -1490,7 +1490,7 @@ class MainActivity : ComponentActivity() {
         // GGWave is now auto-initialized on app load
         if (AudioStatus.value == "Ready") {
             addGGWaveLog("ℹ️ GGWave already initialized and ready!")
-            Toast.makeText(this@MainActivity, "GGWave Already Ready", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this@MainActivity, " Audio transfer Already Ready", Toast.LENGTH_SHORT).show()
         } else {
             addGGWaveLog("🔄 Re-initializing GGWave...")
             initializeGGWaveOnAppLoad()
@@ -1635,7 +1635,7 @@ ${if (mediaVolume == 0) "• Media volume is 0 - increase volume\n" else ""}
                 override fun onError(error: String) {
                     runOnUiThread {
                         addGGWaveLog("❌ GGWave error: $error")
-                        Toast.makeText(this@MainActivity, "GGWave Error: $error", Toast.LENGTH_LONG).show()
+                        Toast.makeText(this@MainActivity, "Audio transfer Error: $error", Toast.LENGTH_LONG).show()
                     }
                 }
             })
@@ -1688,7 +1688,7 @@ ${if (mediaVolume == 0) "• Media volume is 0 - increase volume\n" else ""}
 
                             // Trigger the transaction functionality exactly like the Start Simulation button
                             startTransaction { newCards, showCards ->
-                                Log.d("Debug", "GGWave triggered cards callback: ${newCards.size} cards, show = $showCards")
+                                Log.d("Debug", "Audio triggered cards callback: ${newCards.size} cards, show = $showCards")
 
                                 // Update class-level state variables that can be accessed by Composables
                                 CardsState.value = newCards
@@ -1745,10 +1745,10 @@ ${if (mediaVolume == 0) "• Media volume is 0 - increase volume\n" else ""}
                     ggWaveListening.value = true
                     addGGWaveLog("🎤 GGWave listening started")
                 } else {
-                    addGGWaveLog("❌ Failed to start GGWave listening")
+                    addGGWaveLog("❌ Failed to start audio based listening")
                 }
             } catch (e: Exception) {
-                addGGWaveLog("❌ Error starting GGWave: ${e.message}")
+                addGGWaveLog("❌ Error starting audio: ${e.message}")
             }
         }
     }
@@ -1794,7 +1794,7 @@ ${if (mediaVolume == 0) "• Media volume is 0 - increase volume\n" else ""}
         val logEntry = "[$timestamp] $message"
 
         ggWaveLogMessages.value = ggWaveLogMessages.value + logEntry
-        Log.d("GGWave", message)
+        Log.d("audio-transfer", message)
     }
 
     override fun onDestroy() {
