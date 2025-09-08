@@ -22,6 +22,10 @@ Built with a modular architecture, this SDK supports multiple POS devices throug
 ## Example
 https://github.com/user-attachments/assets/7567b3ff-419a-44c8-acfc-b420cef9d3c2
 
+
+## Example
+https://github.com/user-attachments/assets/7567b3ff-419a-44c8-acfc-b420cef9d3c2
+
 ## 🚀 Features
 
 ### Core Capabilities
