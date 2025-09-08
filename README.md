@@ -18,13 +18,16 @@ Built with a modular architecture, this SDK supports multiple POS devices throug
 - 📱 **[DrishtiPay Mobile SDK](https://github.com/freedom-finance-stack/drishtipay-mobile-sdk)** - Customer-side mobile implementation
 - 🏪 **DrishtiPay POS SDK** - *You are here* - Merchant-side POS integration
 
-
-## Example
-https://github.com/user-attachments/assets/7567b3ff-419a-44c8-acfc-b420cef9d3c2
+## Demo Video
 
 
-## Example
-https://github.com/user-attachments/assets/7567b3ff-419a-44c8-acfc-b420cef9d3c2
+https://github.com/user-attachments/assets/3e53570a-c2d1-4cfe-88df-63b9f64f3c6e
+
+
+
+## Example Implementation
+https://github.com/freedom-finance-stack/drishtipay-pos-sdk/tree/master/example/drishtipay-drive-app
+
 
 ## 🚀 Features
 
