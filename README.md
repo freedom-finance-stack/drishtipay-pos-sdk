@@ -1,28 +1,38 @@
 # DrishtiPay POS SDK
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Android API](https://img.shields.io/badge/API-23%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=23)
 [![Java Version](https://img.shields.io/badge/Java-11-blue.svg)](https://www.oracle.com/java/technologies/javase-jdk11-downloads.html)
 
+> **Merchant-side POS SDK enabling accessible payments for visually impaired customers**
 
-## 🚀 What is DrishtiPay 
+## 🏪 About This SDK
 
-DrishtiPay is an **open standard that transforms traditional offline card payments into secure online experiences** by establishing communication channels between smartphones and POS terminals. Instead of physical cards and vulnerable PIN entries, customers tap their phones to identify themselves and authenticate transactions using OTPs on their trusted devices. This eliminates critical security risks, especially for visually impaired users who must verbally share PINs with merchants.
+The **DrishtiPay POS SDK** provides the technical foundation for implementing the [DrishtiPay open standard](https://github.com/freedom-finance-stack/drishtipay-parent) on merchant Point of Sale systems. This comprehensive, plugin-based Android library enables POS manufacturers and payment processors to support **accessible payments for visually impaired customers**.
 
-The protocol implements **dual-channel data transmission** supporting both **NFC and GGWave audio-based transfer**. While NFC enables rapid handshakes with modern terminals, our integrated audio transmission system transmits encrypted payment data through sound waves, ensuring compatibility even with legacy POS systems. This redundant architecture bridges offline merchant infrastructure with online payment security, maintaining end-to-end encryption throughout the transaction flow.
+Built with a modular architecture, this SDK supports multiple POS devices through a clean plugin interface, ensuring universal compatibility while maintaining the highest security standards.
 
-As an open-source initiative, DrishtiPay democratizes this offline-to-online transformation by publishing comprehensive interface specifications for ecosystem-wide adoption by financial institutions and payment processors. This standards-based approach particularly empowers visually impaired users to conduct autonomous transactions using familiar assistive technologies, restoring privacy and security while fostering financial inclusion at scale.
+### 🔗 Part of the DrishtiPay Ecosystem
 
-This SDK provides the technical foundation for implementing DrishtiPay's open standard, offering developers a comprehensive, plugin-based Android library for POS systems with unified NFC payment processing and audio-based data transmission capabilities. Built with a modular architecture that supports multiple POS through a clean plugin interface.
+- 🏠 **[DrishtiPay Parent](https://github.com/freedom-finance-stack/drishtipay-parent)** - Complete ecosystem overview and documentation
+- 📱 **[DrishtiPay Mobile SDK](https://github.com/freedom-finance-stack/drishtipay-mobile-sdk)** - Customer-side mobile implementation
+- 🏪 **DrishtiPay POS SDK** - *You are here* - Merchant-side POS integration
 
 ## 🚀 Features
 
 ### Core Capabilities
 - **Universal NFC Support**: Unified interface for NFC payment processing across different POS devices
 - **Plugin Architecture**: Extensible design supporting PAX, Ingenico, Verifone, and other POS manufacturers
-- **Audio Data Transmission**: GGWave-powered sound-based data transfer for contactless interactions
+- **Audio Data Transmission**: GGWave-powered sound-based data transfer for legacy POS compatibility
+- **Accessibility Focused**: Designed to eliminate PIN sharing for visually impaired customers
 - **Payment Processing**: Comprehensive payment handling with support for cards, UPI, and contactless payments
 - **Mock & Real Modes**: Development-friendly with simulation capabilities for testing without hardware
+
+### Accessibility Benefits
+- **🔒 Enhanced Privacy**: Eliminates need for customers to share PINs verbally
+- **🛡️ Improved Security**: Secure smartphone-based authentication
+- **♿ Inclusive Design**: Supports assistive technologies and screen readers
+- **🤝 Merchant Friendly**: Easy integration with existing POS infrastructure
 
 
 ## 📋 Table of Contents
@@ -326,6 +336,10 @@ ggWave.startListening(callback);
 ./gradlew :pos-sdk-core:assembleRelease
 ```
 
+## 📄 License
+
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+
 ## 🙏 Acknowledgments
 
 - **[GGWave](https://github.com/ggerganov/ggwave)** by Georgi Gerganov - Audio data transmission library
@@ -336,7 +350,9 @@ For contribution guidelines, see [CONTRIBUTING](contributing.md).
 ## 📞 Support
 
 - **Issues**: [GitHub Issues](https://github.com/freedom-finance-stack/drishtipay-pos-sdk/issues)
-- **Email**: [support@freedomfinancestack.com](mailto:support@freedomfinancestack.com)
+- **Community**: [DrishtiPay Discussions](https://github.com/freedom-finance-stack/drishtipay-parent/discussions)
+- **Accessibility Support**: [accessibility@freedomfinancestack.com](mailto:accessibility@freedomfinancestack.com)
+- **Technical Support**: [support@freedomfinancestack.com](mailto:support@freedomfinancestack.com)
 
 ---
 

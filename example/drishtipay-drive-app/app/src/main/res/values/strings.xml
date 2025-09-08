@@ -8,7 +8,7 @@
     <!-- Main Screen -->
     <string name="welcome_merchant">Welcome, Merchant</string>
     <string name="ready_for_payment">Ready for Payment</string>
-    <string name="tap_card_or_phone">Tap Card or Phone to Pay</string>
+    <string name="tap_card_or_phone">Tap to Pay or Play audio</string>
     <string name="payment_simulation">Payment Simulation</string>
     <string name="start_simulation">Start Payment Simulation</string>
     
