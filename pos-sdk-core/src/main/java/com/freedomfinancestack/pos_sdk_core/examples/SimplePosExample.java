@@ -17,7 +17,7 @@ import com.freedomfinancestack.pos_sdk_core.models.GGWaveMessage;
 
 /**
  * Simple example showing how to use Universal POS SDK features:
- * 1. NFC for tap-to-pay transactions
+ * 1. NFC for tap-to-pay or play audio transactions
  * 2. GGWave for audio-based data transmission
  * 
  * Shows multiple approaches:
