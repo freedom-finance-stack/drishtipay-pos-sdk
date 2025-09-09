@@ -8,13 +8,13 @@
 
 ## 🏪 About This SDK
 
-The **DrishtiPay POS SDK** provides the technical foundation for implementing the [DrishtiPay open standard](https://github.com/freedom-finance-stack/drishtipay-parent) on merchant Point of Sale systems. This comprehensive, plugin-based Android library enables POS manufacturers and payment processors to support **accessible payments for visually impaired customers**.
+The **DrishtiPay POS SDK** provides the technical foundation for implementing the [DrishtiPay open standard](https://github.com/freedom-finance-stack/drishtipay) on merchant Point of Sale systems. This comprehensive, plugin-based Android library enables POS manufacturers and payment processors to support **accessible payments for visually impaired customers**.
 
 Built with a modular architecture, this SDK supports multiple POS devices through a clean plugin interface, ensuring universal compatibility while maintaining the highest security standards.
 
 ### 🔗 Part of the DrishtiPay Ecosystem
 
-- 🏠 **[DrishtiPay Parent](https://github.com/freedom-finance-stack/drishtipay-parent)** - Complete ecosystem overview and documentation
+- 🏠 **[DrishtiPay](https://github.com/freedom-finance-stack/drishtipay)** - Complete ecosystem overview and documentation
 - 📱 **[DrishtiPay Mobile SDK](https://github.com/freedom-finance-stack/drishtipay-mobile-sdk)** - Customer-side mobile implementation
 - 🏪 **DrishtiPay POS SDK** - *You are here* - Merchant-side POS integration
 
@@ -361,9 +361,8 @@ For contribution guidelines, see [CONTRIBUTING](contributing.md).
 ## 📞 Support
 
 - **Issues**: [GitHub Issues](https://github.com/freedom-finance-stack/drishtipay-pos-sdk/issues)
-- **Community**: [DrishtiPay Discussions](https://github.com/freedom-finance-stack/drishtipay-parent/discussions)
-- **Accessibility Support**: [accessibility@freedomfinancestack.com](mailto:accessibility@freedomfinancestack.com)
-- **Technical Support**: [support@freedomfinancestack.com](mailto:support@freedomfinancestack.com)
+- **Accessibility Support**: [contact@freedomfinancestack.com](mailto:contact@freedomfinancestack.com)
+- **Technical Support**: [contact@freedomfinancestack.com](mailto:contact@freedomfinancestack.com)
 
 ---
 
