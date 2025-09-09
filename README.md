@@ -361,8 +361,7 @@ For contribution guidelines, see [CONTRIBUTING](contributing.md).
 ## 📞 Support
 
 - **Issues**: [GitHub Issues](https://github.com/freedom-finance-stack/drishtipay-pos-sdk/issues)
-- **Accessibility Support**: [contact@freedomfinancestack.com](mailto:contact@freedomfinancestack.com)
-- **Technical Support**: [contact@freedomfinancestack.com](mailto:contact@freedomfinancestack.com)
+- **Support**: [contact@freedomfinancestack.com](mailto:contact@freedomfinancestack.com)
 
 ---
 
